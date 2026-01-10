@@ -10,10 +10,10 @@ struct SwiftFindRefs: ParsableCommand {
     var derivedDataPath: String?
 
     @Option(name: [.short, .customLong("symbolName")], help: "The symbol name to find references for")
-    var symbolName: String
+    var name: String
 
     @Option(name: [.short, .customLong("symbolType")], help: "The symbol type (e.g., function, variable, class)")
-    var symbolType: String?
+    var type: String?
 
     /// Flag to enable verbose output for diagnostic purposes.
     @Option(name: .shortAndLong, help: "Flag to enable verbose output.")
@@ -27,8 +27,8 @@ struct SwiftFindRefs: ParsableCommand {
         let compositionRoot = CompositionRoot(
             projectName: projectName,
             derivedDataPath: derivedDataPath,
-            symbolName: symbolName,
-            symbolType: symbolType,
+            symbolName: name,
+            symbolType: type,
             print: { print($0) },
             vPrint: { if verbose { print($0) } },
             fileSystem: fileSystem,

@@ -15,16 +15,16 @@ brew install swiftfindrefs
 ## ⚙️ Command line flags
 - `-p, --projectName` helps the tool infer the right DerivedData folder when you do not pass `derivedDataPath`.
 - `-d, --derivedDataPath` points directly to a DerivedData (or IndexStoreDB) directory and skips discovery.
-- `-s, --symbolName` is the symbol you want to inspect. This is required.
-- `-t, --symbolType` narrows matches to a specific kind (e.g. `class`, `function`).
+- `-n, --name` is the symbol you want to inspect. This is required.
+- `-t, --type` narrows matches to a specific kind (e.g. `class`, `function`).
 - `-v, --verbose` prints discovery steps, resolved paths, and finder diagnostics.
 
 ## 🚀 Usage
 ```bash
 swiftfindrefs \
     --projectName MyApp \
-    --symbolName SelectionViewController \
-    --symbolType class
+    --name SelectionViewController \
+    --type class
 ```
 Sample output:
 ```

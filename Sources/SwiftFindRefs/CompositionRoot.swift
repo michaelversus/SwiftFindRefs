@@ -8,7 +8,7 @@ struct CompositionRoot {
     let print: (String) -> Void
     let vPrint: (String) -> Void
     let fileSystem: FileSystemProvider
-    let derivedDataLocator: DerivedDataLocator
+    let derivedDataLocator: DerivedDataLocatorProtocol
 
     func run() throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(

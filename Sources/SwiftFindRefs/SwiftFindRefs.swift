@@ -3,21 +3,21 @@ import Foundation
 
 @main
 struct SwiftFindRefs: ParsableCommand {
-    //@Option(name: [.short, .customLong("projectName")], help: "The name of the Xcode project to help CLI find the Derived Data Index Store Path")
-    var projectName: String? = "Kaizen"
+    @Option(name: [.short, .customLong("projectName")], help: "The name of the Xcode project to help CLI find the Derived Data Index Store Path")
+    var projectName: String?
 
-    //@Option(name: [.short, .customLong("derivedDataPath")], help: "The Derived Data path where Xcode stores build data")
+    @Option(name: [.short, .customLong("derivedDataPath")], help: "The Derived Data path where Xcode stores build data")
     var derivedDataPath: String?
 
-//    @Option(name: [.short, .customLong("symbolName")], help: "The symbol name to find references for")
-    var symbolName: String = "Selection"
+    @Option(name: [.short, .customLong("symbolName")], help: "The symbol name to find references for")
+    var symbolName: String
 
-    //@Option(name: [.short, .customLong("symbolType")], help: "The symbol type (e.g., function, variable, class)")
-    var symbolType: String? = "class"
+    @Option(name: [.short, .customLong("symbolType")], help: "The symbol type (e.g., function, variable, class)")
+    var symbolType: String?
 
     /// Flag to enable verbose output for diagnostic purposes.
-    //@Option(name: .shortAndLong, help: "Flag to enable verbose output.")
-    var verbose: Bool = true
+    @Option(name: .shortAndLong, help: "Flag to enable verbose output.")
+    var verbose: Bool = false
 
     func run() throws {
         let fileSystem = FileSystem(

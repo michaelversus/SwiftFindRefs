@@ -8,13 +8,8 @@ A Swift Package Manager CLI that locates every file in your Xcode DerivedData in
 
 ## 🛠️ Installation
 ```bash
-# Clone and build
-git clone https://github.com/michaelversus/SwiftFindRefs.git
-cd SwiftFindRefs
-swift build -c release
-
-# Optionally expose the binary
-ln -s "$(pwd)/.build/release/SwiftFindRefs" /usr/local/bin/swiftfindrefs
+brew tap michaelversus/SwiftFindRefs https://github.com/michaelversus/SwiftFindRefs.git
+brew install swiftfindrefs
 ```
 
 ## ⚙️ Command line flags
@@ -26,11 +21,10 @@ ln -s "$(pwd)/.build/release/SwiftFindRefs" /usr/local/bin/swiftfindrefs
 
 ## 🚀 Usage
 ```bash
-swift run SwiftFindRefs \
+swiftfindrefs \
     --projectName MyApp \
     --symbolName SelectionViewController \
-    --symbolType class \
-    --verbose
+    --symbolType class
 ```
 Sample output:
 ```

@@ -5,7 +5,7 @@
 
 # 🔎 SwiftFindRefs
 A Swift Package Manager CLI that locates every file in your Xcode DerivedData index referencing a chosen symbol. It resolves the correct IndexStore path automatically, queries Apple’s IndexStoreDB, and prints a deduplicated list of source files.
-
+**Common use case**: When working with multiple modules and moving models between them, finding all references to add missing imports is tedious. Using this CLI to feed file lists to AI agents dramatically improves refactoring results.
 ## 🛠️ Installation
 ```bash
 brew tap michaelversus/SwiftFindRefs https://github.com/michaelversus/SwiftFindRefs.git

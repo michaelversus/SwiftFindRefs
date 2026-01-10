@@ -21,13 +21,7 @@ struct SwiftFindRefs: ParsableCommand {
 
     func run() throws {
         let fileSystem = FileSystem(
-            fileManager: FileManager.default,
-            enumeratorFactory: { url in
-                FileManager.default.enumerator(
-                    at: url,
-                    includingPropertiesForKeys: nil
-                )
-            }
+            fileManager: FileManager.default
         )
         let derivedDataLocator = DerivedDataLocator(fileSystem: fileSystem)
         let compositionRoot = CompositionRoot(

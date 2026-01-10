@@ -1,5 +1,5 @@
 ---
-aplyTo: "**/*.swift"
+applyTo: "**/*.swift"
 ---
 ## Naming
 - Use camel case

@@ -1,6 +1,6 @@
 <p align="center">
-    <img src="https://img.shields.io/badge/Swift-6.2-red.svg" />
-    <img src="https://img.shields.io/badge/platform-macOS%2014%2B-blue.svg" />
+    <img src="https://img.shields.io/badge/Swift-6.0-red.svg" />
+    <img src="https://codecov.io/gh/michaelversus/SwiftFindRefs/graph/badge.svg?token="/>
 </p>
 
 # 🔎 SwiftFindRefs

@@ -38,7 +38,6 @@ Sample output:
 ## 🧠 How it works
 1. **Derived data resolution** – `DerivedDataLocator` uses the provided path or infers the newest `ProjectName-*` folder under `~/Library/Developer/Xcode/DerivedData`.
 2. **Index routing** – `DerivedDataPaths` ensures the path points into `Index.noindex/DataStore/IndexStoreDB` so we can open the index without extra setup.
-3. **Reference filtering** – `IndexStoreFinder` opens the index, walks every unit/record, and keeps only occurrences whose roles include `.reference`, `.call`, `.read`, or `.write` to avoid declaration noise.
 4. **Output formatting** – Paths are normalized, deduplicated, and printed once for easier scripting.
 
 ## 🧪 Testing

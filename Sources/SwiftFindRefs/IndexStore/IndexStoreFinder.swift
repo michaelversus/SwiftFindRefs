@@ -31,7 +31,7 @@ struct IndexStoreFinder {
 
                     let filename: String
                     if let sourcePath, !sourcePath.isEmpty {
-                        filename = URL(fileURLWithPath: sourcePath).lastPathComponent
+                        filename = URL(fileURLWithPath: sourcePath).path()
                     } else {
                         filename = recordName
                     }

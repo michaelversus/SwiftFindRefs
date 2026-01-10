@@ -25,6 +25,6 @@ struct CompositionRoot {
             of: symbolName,
             symbolType: symbolType
         )
-        print("✅ FoundReferences:\n\(references.joined(separator: "\n"))")
+        print("✅ Found \(references.count) references:\n\(references.joined(separator: "\n"))")
     }
 }

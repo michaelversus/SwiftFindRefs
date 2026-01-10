@@ -8,6 +8,14 @@ A Swift Package Manager CLI that locates every file in your Xcode DerivedData in
 
 ## 🚀 Common use case 
 When working with multiple modules and moving models between them, finding all references to add missing imports is tedious. Using this CLI to feed file lists to AI agents dramatically improves refactoring results.
+Just tell your AI agent to execute the script below and add missing import statements to all files
+```bash
+swiftfindrefs -p SomeProject -n SomeSymbolName -t SomeSymbolType | while read file; do
+  if ! grep -q "import SomeModule" "$file"; then
+    echo "$file"
+  fi
+done
+```
 ## 🛠️ Installation
 ```bash
 brew tap michaelversus/SwiftFindRefs https://github.com/michaelversus/SwiftFindRefs.git

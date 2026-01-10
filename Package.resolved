@@ -1,0 +1,24 @@
+{
+  "originHash" : "13b21843d92ae8026a0de785a1281cb40b0533db7dcb62bcd8e8888b88eab3f7",
+  "pins" : [
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "c5d11a805e765f52ba34ec7284bd4fcd6ba68615",
+        "version" : "1.7.0"
+      }
+    },
+    {
+      "identity" : "swift-index-store",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/MobileNativeFoundation/swift-index-store",
+      "state" : {
+        "branch" : "main",
+        "revision" : "c4665d1c0897f45add476bb78692cbf1821c0e7a"
+      }
+    }
+  ],
+  "version" : 3
+}

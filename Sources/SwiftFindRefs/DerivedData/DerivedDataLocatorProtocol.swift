@@ -1,3 +1,5 @@
+import Foundation
+
 /// Provides an abstraction for finding the correct DerivedData directory for a given project.
 protocol DerivedDataLocatorProtocol {
     /// Locates the DerivedData directory either from an explicit path or by inferring it from the project name.

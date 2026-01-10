@@ -38,7 +38,7 @@ Sample output:
 ## 🧠 How it works
 1. **Derived data resolution** – `DerivedDataLocator` uses the provided path or infers the newest `ProjectName-*` folder under `~/Library/Developer/Xcode/DerivedData`.
 2. **Index routing** – `DerivedDataPaths` ensures the path points into `Index.noindex/DataStore/IndexStoreDB` so we can open the index without extra setup.
-4. **Output formatting** – Paths are normalized, deduplicated, and printed once for easier scripting.
+3. **Output formatting** – Paths are normalized, deduplicated, and printed once for easier scripting.
 
 ## 🧪 Testing
 The package uses the Swift Testing framework (`swift test`) with mocks for filesystem and derived-data resolution. Tests cover locator edge cases, path building, and index error handling.

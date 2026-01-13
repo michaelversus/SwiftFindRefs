@@ -5,16 +5,24 @@ struct RecordIndex {
     let recordNames: [String]
     private let recordToSource: [String: String]
     
+    /// Internal initializer for testing
+    init(recordNames: [String], recordToSource: [String: String] = [:]) {
+        self.recordNames = recordNames
+        self.recordToSource = recordToSource
+    }
+    
     func sourcePath(for recordName: String) -> String {
         recordToSource[recordName] ?? recordName
     }
     
-    static func build(from store: IndexStore) -> RecordIndex {
+    static func build(from store: some IndexStoreProviding) -> RecordIndex {
         var recordToSource: [String: String] = [:]
         var allRecordNames = Set<String>()
         
-        for unitReader in store.units where !unitReader.isSystem {
-            unitReader.forEach { dependency in
+        store.forEachUnit { unitReader in
+            guard !unitReader.isSystem else { return }
+            
+            unitReader.forEachDependency { dependency in
                 guard dependency.kind == .record else { return }
                 let recordName = dependency.name
                 allRecordNames.insert(recordName)

@@ -10,7 +10,7 @@ struct SymbolQuery {
         self.kind = kindString.flatMap { SymbolKind(parsing: $0) }
     }
     
-    func matches(_ symbol: Symbol) -> Bool {
+    func matches(_ symbol: some SymbolMatching) -> Bool {
         guard symbol.name == name else { return false }
         if let kind, symbol.kind != kind { return false }
         return true

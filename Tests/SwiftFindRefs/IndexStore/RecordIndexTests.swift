@@ -290,4 +290,8 @@ private struct MockIndexStore: IndexStoreProviding {
     func forEachUnit(_ callback: (UnitReaderProviding) -> Void) {
         units.forEach { callback($0) }
     }
+    
+    func recordReader(for recordName: String) throws -> RecordReaderProviding? {
+        nil // Not needed for RecordIndex tests
+    }
 }

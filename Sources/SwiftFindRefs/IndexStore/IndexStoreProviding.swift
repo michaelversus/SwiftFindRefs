@@ -16,4 +16,15 @@ protocol UnitReaderProviding {
 /// Protocol for index store abstraction, enabling testability
 protocol IndexStoreProviding {
     func forEachUnit(_ callback: (UnitReaderProviding) -> Void)
+    func recordReader(for recordName: String) throws -> RecordReaderProviding?
+}
+
+/// Protocol for record reader abstraction, enabling testability
+protocol RecordReaderProviding {
+    func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void)
+}
+
+/// Protocol for symbol occurrence abstraction, enabling testability
+protocol SymbolOccurrenceProviding {
+    var symbolMatching: SymbolMatching { get }
 }

@@ -18,4 +18,22 @@ extension IndexStore: IndexStoreProviding {
             callback(unit)
         }
     }
+    
+    func recordReader(for recordName: String) throws -> RecordReaderProviding? {
+        try? RecordReader(indexStore: self, recordName: recordName)
+    }
+}
+
+extension RecordReader: RecordReaderProviding {
+    func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void) {
+        forEach { occurrence in
+            callback(occurrence)
+        }
+    }
+}
+
+extension SymbolOccurrence: SymbolOccurrenceProviding {
+    var symbolMatching: SymbolMatching {
+        symbol
+    }
 }

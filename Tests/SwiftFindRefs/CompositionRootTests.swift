@@ -7,7 +7,7 @@ struct CompositionRootTests {
     // MARK: - Tests
 
     @Test("test run with missing inputs throws missing inputs error")
-    func test_run_WithMissingInputs_throwsMissingInputsError() {
+    func test_run_WithMissingInputs_throwsMissingInputsError() async {
         // Given
         let fileSystem = MockFileSystem()
         let sut = makeSUT(
@@ -18,8 +18,8 @@ struct CompositionRootTests {
         )
 
         // When
-        let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.run()
+        let error = await #expect(throws: DerivedDataLocatorError.self) {
+            try await sut.run()
         }
 
         // Then
@@ -30,7 +30,7 @@ struct CompositionRootTests {
     }
 
     @Test("test run with invalid derived data path throws invalid path error")
-    func test_run_WithInvalidDerivedDataPath_throwsInvalidPathError() {
+    func test_run_WithInvalidDerivedDataPath_throwsInvalidPathError() async {
         // Given
         let invalidPath = "/invalid/DerivedData"
         let fileSystem = MockFileSystem(fileExistsResults: [invalidPath: false])
@@ -42,8 +42,8 @@ struct CompositionRootTests {
         )
 
         // When
-        let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.run()
+        let error = await #expect(throws: DerivedDataLocatorError.self) {
+            try await sut.run()
         }
 
         // Then
@@ -55,7 +55,7 @@ struct CompositionRootTests {
     }
 
     @Test("test run with nil symbol type logs fallback before index store failure")
-    func test_run_WithNilSymbolType_logsFallbackBeforeIndexStoreFailure() throws {
+    func test_run_WithNilSymbolType_logsFallbackBeforeIndexStoreFailure() async throws {
         // Given
         let derivedDataPath = "/tmp/nonexistent/IndexStoreDB"
         let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
@@ -71,8 +71,8 @@ struct CompositionRootTests {
         )
 
         // When
-        _ = #expect(throws: (any Error).self) {
-            try sut.run()
+        _ = await #expect(throws: (any Error).self) {
+            try await sut.run()
         }
 
         // Then

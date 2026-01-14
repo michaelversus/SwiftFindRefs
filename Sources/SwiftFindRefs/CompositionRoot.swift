@@ -10,7 +10,7 @@ struct CompositionRoot {
     let fileSystem: FileSystemProvider
     let derivedDataLocator: DerivedDataLocatorProtocol
 
-    func run() throws {
+    func run() async throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(
             projectName: projectName,
             derivedDataPath: derivedDataPath
@@ -21,7 +21,7 @@ struct CompositionRoot {
             indexStorePath: derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
         )
         print("🔍 Searching for references to symbol '\(symbolName)' of type '\(symbolType ?? "any")'")
-        let references = try indexStoreFinder.fileReferences(
+        let references = try await indexStoreFinder.fileReferences(
             of: symbolName,
             symbolType: symbolType
         )

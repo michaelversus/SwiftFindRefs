@@ -9,33 +9,33 @@ struct IndexStoreFinderTests {
     // MARK: - fileReferences with invalid path
 
     @Test("test fileReferences with invalid path throws error")
-    func test_fileReferences_WithInvalidPath_throwsError() {
+    func test_fileReferences_WithInvalidPath_throwsError() async {
         // Given
         let sut = makeSUT(indexStorePath: "/nonexistent/index/store")
 
         // When / Then
-        #expect(throws: (any Error).self) {
-            _ = try sut.fileReferences(of: "SomeSymbol", symbolType: nil)
+        await #expect(throws: (any Error).self) {
+            _ = try await sut.fileReferences(of: "SomeSymbol", symbolType: nil)
         }
     }
 
     // MARK: - fileReferences with mock store
 
     @Test("test fileReferences with empty store returns empty array")
-    func test_fileReferences_WithEmptyStore_returnsEmptyArray() throws {
+    func test_fileReferences_WithEmptyStore_returnsEmptyArray() async throws {
         // Given
         let sut = makeSUT()
         let store = MockIndexStore(units: [], recordReaders: [:])
 
         // When
-        let result = try sut.fileReferences(of: "SomeSymbol", symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: "SomeSymbol", symbolType: nil, from: store)
 
         // Then
         #expect(result.isEmpty)
     }
 
     @Test("test fileReferences with matching symbol returns file path")
-    func test_fileReferences_WithMatchingSymbol_returnsFilePath() throws {
+    func test_fileReferences_WithMatchingSymbol_returnsFilePath() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "MyClass"
@@ -59,7 +59,7 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.count == 1)
@@ -67,7 +67,7 @@ struct IndexStoreFinderTests {
     }
 
     @Test("test fileReferences with non-matching symbol returns empty array")
-    func test_fileReferences_WithNonMatchingSymbol_returnsEmptyArray() throws {
+    func test_fileReferences_WithNonMatchingSymbol_returnsEmptyArray() async throws {
         // Given
         let sut = makeSUT()
         let recordName = "SomeRecord"
@@ -89,14 +89,14 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: "MySymbol", symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: "MySymbol", symbolType: nil, from: store)
 
         // Then
         #expect(result.isEmpty)
     }
 
     @Test("test fileReferences with matching name but different kind returns empty array")
-    func test_fileReferences_WithMatchingNameButDifferentKind_returnsEmptyArray() throws {
+    func test_fileReferences_WithMatchingNameButDifferentKind_returnsEmptyArray() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "Selection"
@@ -119,14 +119,14 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: "class", from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: "class", from: store)
 
         // Then
         #expect(result.isEmpty)
     }
 
     @Test("test fileReferences with nil symbol type matches any kind")
-    func test_fileReferences_WithNilSymbolType_matchesAnyKind() throws {
+    func test_fileReferences_WithNilSymbolType_matchesAnyKind() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "MySymbol"
@@ -150,7 +150,7 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.count == 1)
@@ -158,7 +158,7 @@ struct IndexStoreFinderTests {
     }
 
     @Test("test fileReferences with multiple matching files returns sorted paths")
-    func test_fileReferences_WithMultipleMatchingFiles_returnsSortedPaths() throws {
+    func test_fileReferences_WithMultipleMatchingFiles_returnsSortedPaths() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "SharedProtocol"
@@ -188,7 +188,7 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.count == 3)
@@ -196,7 +196,7 @@ struct IndexStoreFinderTests {
     }
 
     @Test("test fileReferences skips system units")
-    func test_fileReferences_WithSystemUnits_skipsThem() throws {
+    func test_fileReferences_WithSystemUnits_skipsThem() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "MyClass"
@@ -218,14 +218,14 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.isEmpty)
     }
 
     @Test("test fileReferences with unreadable record skips it")
-    func test_fileReferences_WithUnreadableRecord_skipsIt() throws {
+    func test_fileReferences_WithUnreadableRecord_skipsIt() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "MyClass"
@@ -243,14 +243,14 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.isEmpty)
     }
 
     @Test("test fileReferences deduplicates files when symbol appears multiple times")
-    func test_fileReferences_WithDuplicateRecords_deduplicatesFiles() throws {
+    func test_fileReferences_WithDuplicateRecords_deduplicatesFiles() async throws {
         // Given
         let sut = makeSUT()
         let symbolName = "MyClass"
@@ -280,7 +280,7 @@ struct IndexStoreFinderTests {
         )
 
         // When
-        let result = try sut.fileReferences(of: symbolName, symbolType: nil, from: store)
+        let result = try await sut.fileReferences(of: symbolName, symbolType: nil, from: store)
 
         // Then
         #expect(result.count == 1)
@@ -296,12 +296,12 @@ struct IndexStoreFinderTests {
 
 // MARK: - Test Doubles
 
-private struct MockSymbol: SymbolMatching {
+private struct MockSymbol: SymbolMatching, Sendable {
     let name: String
     let kind: SymbolKind
 }
 
-private struct MockSymbolOccurrence: SymbolOccurrenceProviding {
+private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
     let symbol: MockSymbol
     
     var symbolMatching: SymbolMatching {
@@ -309,7 +309,7 @@ private struct MockSymbolOccurrence: SymbolOccurrenceProviding {
     }
 }
 
-private struct MockRecordReader: RecordReaderProviding {
+private struct MockRecordReader: RecordReaderProviding, Sendable {
     let occurrences: [MockSymbolOccurrence]
     
     func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void) {
@@ -317,13 +317,13 @@ private struct MockRecordReader: RecordReaderProviding {
     }
 }
 
-private struct MockUnitDependency: UnitDependencyProviding {
+private struct MockUnitDependency: UnitDependencyProviding, Sendable {
     let kind: DependencyKind
     let name: String
     let filePath: String
 }
 
-private struct MockUnitReader: UnitReaderProviding {
+private struct MockUnitReader: UnitReaderProviding, Sendable {
     let isSystem: Bool
     let dependencies: [MockUnitDependency]
     
@@ -332,7 +332,7 @@ private struct MockUnitReader: UnitReaderProviding {
     }
 }
 
-private struct MockIndexStore: IndexStoreProviding {
+private struct MockIndexStore: IndexStoreProviding, Sendable {
     let units: [MockUnitReader]
     let recordReaders: [String: MockRecordReader]
     

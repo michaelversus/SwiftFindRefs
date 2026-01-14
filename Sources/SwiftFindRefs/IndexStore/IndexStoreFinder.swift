@@ -4,39 +4,46 @@ import Foundation
 struct IndexStoreFinder {
     let indexStorePath: String
 
-    func fileReferences(of symbolName: String, symbolType: String?) throws -> [String] {
+    func fileReferences(of symbolName: String, symbolType: String?) async throws -> [String] {
         let store = try IndexStore(path: indexStorePath)
-        return try fileReferences(of: symbolName, symbolType: symbolType, from: store)
+        return try await fileReferences(of: symbolName, symbolType: symbolType, from: store)
     }
 
     func fileReferences(
         of symbolName: String,
         symbolType: String?,
         from store: some IndexStoreProviding & Sendable
-    ) throws -> [String] {
+    ) async throws -> [String] {
         let query = SymbolQuery(name: symbolName, kindString: symbolType)
         let index = RecordIndex.build(from: store)
 
-        return searchRecordsInParallel(store: store, index: index, query: query)
+        return await searchRecordsInParallel(store: store, index: index, query: query)
     }
 
     private func searchRecordsInParallel(
         store: some IndexStoreProviding & Sendable,
         index: RecordIndex,
         query: SymbolQuery
-    ) -> [String] {
-        let referencedFiles = ThreadSafeSet<String>()
-
-        DispatchQueue.concurrentPerform(iterations: index.recordNames.count) { i in
-            let recordName = index.recordNames[i]
-
-            if recordContainsSymbol(store: store, recordName: recordName, query: query) {
-                let filename = index.sourcePath(for: recordName)
-                referencedFiles.insert(filename)
+    ) async -> [String] {
+        await withTaskGroup(of: String?.self) { group in
+            for recordName in index.recordNames {
+                group.addTask {
+                    guard recordContainsSymbol(store: store, recordName: recordName, query: query) else {
+                        return nil
+                    }
+                    return index.sourcePath(for: recordName)
+                }
             }
+            
+            var referencedFiles = Set<String>()
+            for await filename in group {
+                if let filename = filename {
+                    referencedFiles.insert(filename)
+                }
+            }
+            
+            return Array(referencedFiles).sorted()
         }
-
-        return referencedFiles.values().sorted()
     }
 
     private func recordContainsSymbol(
@@ -56,23 +63,5 @@ struct IndexStoreFinder {
             }
         }
         return found
-    }
-}
-
-private final class ThreadSafeSet<Element: Hashable & Sendable>: @unchecked Sendable {
-    private let lock = NSLock()
-    private var storage = Set<Element>()
-
-    func insert(_ element: Element) {
-        lock.lock()
-        storage.insert(element)
-        lock.unlock()
-    }
-
-    func values() -> [Element] {
-        lock.lock()
-        let snapshot = Array(storage)
-        lock.unlock()
-        return snapshot
     }
 }

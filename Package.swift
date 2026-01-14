@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftFindRefs",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
         .package(url: "https://github.com/MobileNativeFoundation/swift-index-store", branch: "main"),

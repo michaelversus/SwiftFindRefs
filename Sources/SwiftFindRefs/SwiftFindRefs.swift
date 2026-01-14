@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 
 @main
-struct SwiftFindRefs: ParsableCommand {
+struct SwiftFindRefs: AsyncParsableCommand {
     @Option(name: [.short, .customLong("projectName")], help: "The name of the Xcode project to help CLI find the Derived Data Index Store Path")
     var projectName: String?
 
@@ -19,7 +19,7 @@ struct SwiftFindRefs: ParsableCommand {
     @Option(name: .shortAndLong, help: "Flag to enable verbose output.")
     var verbose: Bool = false
 
-    func run() throws {
+    func run() async throws {
         let fileSystem = FileSystem(
             fileManager: FileManager.default
         )
@@ -34,6 +34,6 @@ struct SwiftFindRefs: ParsableCommand {
             fileSystem: fileSystem,
             derivedDataLocator: derivedDataLocator
         )
-        try compositionRoot.run()
+        try await compositionRoot.run()
     }
 }

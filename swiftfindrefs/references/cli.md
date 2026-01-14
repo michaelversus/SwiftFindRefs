@@ -1,0 +1,46 @@
+# CLI reference (agent-focused)
+
+## Preconditions
+- macOS with Xcode installed
+- Project built at least once (DerivedData exists)
+- `swiftfindrefs` is available in PATH
+
+## Flags
+- `-p, --projectName`
+  Helps infer the correct DerivedData folder when `--derivedDataPath` is not provided.
+
+- `-d, --derivedDataPath`
+  Points directly to a DerivedData (or IndexStoreDB) directory and skips discovery.
+
+- `-n, --symbolName` (required)
+  The symbol to inspect.
+
+- `-t, --symbolType`
+  Narrows matches to a specific kind (recommended when possible).
+
+- `-v, --verbose`
+  Prints discovery steps, resolved paths, and diagnostics.
+
+## Recommended invocations
+
+Most common:
+```bash
+swiftfindrefs -p MyApp -n SelectionViewController -t class
+```
+
+Explicit DerivedData / deterministic runs:
+```bash
+swiftfindrefs -d ~/Library/Developer/Xcode/DerivedData/MyApp-XXXX/ -n SelectionViewController -t class
+```
+
+Debug discovery:
+```bash
+swiftfindrefs -p MyApp -n SelectionViewController -t class -v
+```
+
+## Output
+- Absolute file paths, one per line
+- Deduplicated
+
+## Non-goals
+- The tool reports which files reference a symbol, not line or column positions.

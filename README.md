@@ -50,6 +50,32 @@ Sample output:
 2. **Index routing** – `DerivedDataPaths` ensures the path points into `Index.noindex/DataStore/IndexStoreDB` so we can open the index without extra setup.
 3. **Output formatting** – Paths are normalized, deduplicated, and printed once for easier scripting.
 
+## Agent Skill (OpenSkills)
+
+This repository includes an OpenSkills-compatible agent skill located in `swiftfindrefs/`.
+It teaches AI coding agents to use IndexStore-based reference discovery via `swiftfindrefs`
+instead of unreliable text search.
+
+### Install OpenSkills
+```bash
+npm i -g openskills
+```
+
+### Install this skill
+```bash
+openskills install michaelversus/SwiftFindRefs
+```
+
+### Sync into your project
+```bash
+openskills sync
+```
+
+### Example agent prompt
+Use the swiftfindrefs skill to find all references to `SelectionViewController` (class) and add
+`import UIComponents` only where missing.
+
+
 ## 🧪 Testing
 The package uses the Swift Testing framework (`swift test`) with mocks for filesystem and derived-data resolution. Tests cover locator edge cases, path building, and index error handling.
 

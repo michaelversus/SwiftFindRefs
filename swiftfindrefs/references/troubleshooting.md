@@ -6,7 +6,7 @@
   ```bash
   swiftfindrefs -p <Project> -n <Symbol> -t <Type> -v
   ```
-- If multiple DerivedData folders exist, pass `--derivedDataPath`.
+- If multiple DerivedData folders exist for the same project `swiftfindrefs` will use the most recent one.
 
 ## Wrong DerivedData selected
 - Prefer explicit `--derivedDataPath` in CI or multi-clone setups.

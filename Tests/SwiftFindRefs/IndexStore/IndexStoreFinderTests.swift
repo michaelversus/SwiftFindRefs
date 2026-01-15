@@ -303,9 +303,28 @@ private struct MockSymbol: SymbolMatching, Sendable {
 
 private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
     let symbol: MockSymbol
-    
+    let roles: SymbolRoles
+    let locationLine: Int
+    let symbolUSR: String
+
+    init(
+        symbol: MockSymbol,
+        roles: SymbolRoles = [],
+        locationLine: Int = 1,
+        symbolUSR: String = "mock.usr"
+    ) {
+        self.symbol = symbol
+        self.roles = roles
+        self.locationLine = locationLine
+        self.symbolUSR = symbolUSR
+    }
+
     var symbolMatching: SymbolMatching {
         symbol
+    }
+
+    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void) {
+        _ = callback
     }
 }
 
@@ -326,7 +345,24 @@ private struct MockUnitDependency: UnitDependencyProviding, Sendable {
 private struct MockUnitReader: UnitReaderProviding, Sendable {
     let isSystem: Bool
     let dependencies: [MockUnitDependency]
-    
+    let mainFile: String
+    let moduleName: String
+    let recordName: String?
+
+    init(
+        isSystem: Bool,
+        dependencies: [MockUnitDependency],
+        mainFile: String = "/mock/file.swift",
+        moduleName: String = "MockModule",
+        recordName: String? = "mock-record"
+    ) {
+        self.isSystem = isSystem
+        self.dependencies = dependencies
+        self.mainFile = mainFile
+        self.moduleName = moduleName
+        self.recordName = recordName
+    }
+
     func forEachDependency(_ callback: (UnitDependencyProviding) -> Void) {
         dependencies.forEach { callback($0) }
     }

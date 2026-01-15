@@ -106,10 +106,60 @@ struct FileSystemTests {
         #expect(error == .sample)
     }
 
+    @Test("test readFile returns file contents")
+    func test_readFile_ReturnsContents() throws {
+        // Given
+        let fileURL = makeTempFileURL()
+        let contents = "Hello\nWorld"
+        try contents.write(to: fileURL, atomically: true, encoding: .utf8)
+        let sut = makeSUT(fileManager: FileManager.default)
+
+        // When
+        let result = try sut.readFile(atPath: fileURL.path)
+
+        // Then
+        #expect(result == contents)
+    }
+
+    @Test("test writeFile writes contents to disk")
+    func test_writeFile_WritesContents() throws {
+        // Given
+        let fileURL = makeTempFileURL()
+        let contents = "Line1\nLine2"
+        let sut = makeSUT(fileManager: FileManager.default)
+
+        // When
+        try sut.writeFile(contents, toPath: fileURL.path)
+
+        // Then
+        let result = try String(contentsOf: fileURL)
+        #expect(result == contents)
+    }
+
+    @Test("test readLines returns lines asynchronously")
+    func test_readLines_ReturnsLines() async throws {
+        // Given
+        let fileURL = makeTempFileURL()
+        let contents = "LineA\nLineB\nLineC"
+        try contents.write(to: fileURL, atomically: true, encoding: .utf8)
+        let sut = makeSUT(fileManager: FileManager.default)
+
+        // When
+        let lines = try await sut.readLines(atPath: fileURL.path)
+
+        // Then
+        #expect(lines == ["LineA", "LineB", "LineC"])
+    }
+
     // MARK: - Helpers
 
     private func makeSUT(fileManager: FileManager) -> FileSystem {
         FileSystem(fileManager: fileManager)
+    }
+
+    private func makeTempFileURL() -> URL {
+        let directoryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        return directoryURL.appendingPathComponent("SwiftFindRefs-\(UUID().uuidString).txt")
     }
 }
 

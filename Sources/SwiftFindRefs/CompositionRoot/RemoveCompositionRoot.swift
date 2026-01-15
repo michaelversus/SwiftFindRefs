@@ -1,14 +1,15 @@
 import Foundation
+@preconcurrency import IndexStore
 
-struct CompositionRoot {
+struct RemoveCompositionRoot {
     let projectName: String?
     let derivedDataPath: String?
-    let symbolName: String
-    let symbolType: String?
+    let excludeCompilationConditionals: Bool
     let print: (String) -> Void
     let vPrint: (String) -> Void
     let fileSystem: FileSystemProvider
     let derivedDataLocator: DerivedDataLocatorProtocol
+    let removerFactory: (String) -> UnnecessaryTestableRemoving
 
     func run() async throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(
@@ -17,14 +18,11 @@ struct CompositionRoot {
         )
         vPrint("DerivedData path: \(derivedDataPaths.derivedDataURL.path)")
         vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
-        let indexStoreFinder = IndexStoreFinder(
-            indexStorePath: derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
-        )
-        print("🔍 Searching for references to symbol '\(symbolName)' of type '\(symbolType ?? "any")'")
-        let references = try await indexStoreFinder.fileReferences(
-            of: symbolName,
-            symbolType: symbolType
-        )
-        print("✅ Found \(references.count) references:\n\(references.joined(separator: "\n"))")
+        let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
+        let remover = removerFactory(indexStorePath)
+        let updatedFiles = try await remover.run()
+        print("✅ Updated \(updatedFiles.count) files")
+        vPrint("Updated files:")
+        updatedFiles.sorted().forEach { vPrint($0) }
     }
 }

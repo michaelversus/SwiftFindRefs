@@ -10,6 +10,9 @@ protocol UnitDependencyProviding {
 /// Protocol for unit reader abstraction, enabling testability
 protocol UnitReaderProviding {
     var isSystem: Bool { get }
+    var mainFile: String { get }
+    var moduleName: String { get }
+    var recordName: String? { get }
     func forEachDependency(_ callback: (UnitDependencyProviding) -> Void)
 }
 
@@ -27,4 +30,13 @@ protocol RecordReaderProviding {
 /// Protocol for symbol occurrence abstraction, enabling testability
 protocol SymbolOccurrenceProviding {
     var symbolMatching: SymbolMatching { get }
+    var roles: SymbolRoles { get }
+    var locationLine: Int { get }
+    var symbolUSR: String { get }
+    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void)
+}
+
+/// Protocol for related symbols attached to a symbol occurrence.
+protocol RelatedSymbolProviding {
+    var kind: SymbolKind { get }
 }

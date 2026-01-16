@@ -136,8 +136,8 @@ struct FileSystemTests {
         #expect(result == contents)
     }
 
-    @Test("test readLines returns lines asynchronously")
-    func test_readLines_ReturnsLines() async throws {
+    @Test("test readLines returns lines")
+    func test_readLines_ReturnsLines() throws {
         // Given
         let fileURL = makeTempFileURL()
         let contents = "LineA\nLineB\nLineC"
@@ -145,10 +145,28 @@ struct FileSystemTests {
         let sut = makeSUT(fileManager: FileManager.default)
 
         // When
-        let lines = try await sut.readLines(atPath: fileURL.path)
+        let lines = try sut.readLines(atPath: fileURL.path)
 
         // Then
         #expect(lines == ["LineA", "LineB", "LineC"])
+    }
+
+    @Test("test readLines preserves empty lines including trailing ones")
+    func test_readLines_PreservesEmptyLines() throws {
+        // Given
+        let fileURL = makeTempFileURL()
+        // File with empty lines in middle and trailing empty lines
+        let contents = "LineA\n\nLineB\n\n\n"
+        try contents.write(to: fileURL, atomically: true, encoding: .utf8)
+        let sut = makeSUT(fileManager: FileManager.default)
+
+        // When
+        let lines = try sut.readLines(atPath: fileURL.path)
+
+        // Then
+        // components(separatedBy: .newlines) preserves all empty lines including trailing ones
+        // "LineA\n\nLineB\n\n\n" should split to ["LineA", "", "LineB", "", "", ""]
+        #expect(lines == ["LineA", "", "LineB", "", "", ""])
     }
 
     // MARK: - Helpers

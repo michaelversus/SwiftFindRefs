@@ -59,13 +59,11 @@ final class FileSystem: FileSystemProvider {
         try String(contentsOfFile: path)
     }
 
-    func readLines(atPath path: String) async throws -> [String] {
-        let url = URL(fileURLWithPath: path)
-        var lines: [String] = []
-        for try await line in url.resourceBytes.lines {
-            lines.append(line)
-        }
-        return lines
+    func readLines(atPath path: String) throws -> [String] {
+        // Read the file content first to preserve empty lines (including trailing ones)
+        // URL.resourceBytes.lines strips trailing newlines, so we need to split manually
+        let contents = try readFile(atPath: path)
+        return contents.components(separatedBy: .newlines)
     }
 
     func writeFile(_ contents: String, toPath path: String) throws {

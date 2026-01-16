@@ -70,7 +70,7 @@ final class MockFileSystem: FileSystemProvider {
         return readFileResults[path] ?? ""
     }
 
-    func readLines(atPath path: String) async throws -> [String] {
+    func readLines(atPath path: String) throws -> [String] {
         actions.append(.readLines(atPath: path))
         if let error = readFileError {
             throw error

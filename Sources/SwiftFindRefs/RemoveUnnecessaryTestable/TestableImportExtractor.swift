@@ -14,7 +14,7 @@ struct TestableImportExtractor: TestableImportExtracting {
     }
 
     func testableImports(inFile path: String) async throws -> Set<String> {
-        let lines = try await fileSystem.readLines(atPath: path)
+        let lines = try fileSystem.readLines(atPath: path)
         var testableImports = Set<String>()
         var conditionalDepth = 0
 

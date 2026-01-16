@@ -31,9 +31,9 @@ protocol FileSystemProvider {
     /// - Parameter path: A file path (absolute or relative).
     func readFile(atPath path: String) throws -> String
 
-    /// Reads the contents of a file as lines asynchronously.
+    /// Reads the contents of a file as lines.
     /// - Parameter path: A file path (absolute or relative).
-    func readLines(atPath path: String) async throws -> [String]
+    func readLines(atPath path: String) throws -> [String]
 
     /// Writes the contents to a file path.
     /// - Parameters:

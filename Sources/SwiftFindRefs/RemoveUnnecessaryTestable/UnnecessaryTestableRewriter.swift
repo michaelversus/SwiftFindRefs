@@ -17,7 +17,7 @@ struct UnnecessaryTestableRewriter: UnnecessaryTestableRewriting {
         return try await withThrowingTaskGroup(of: String?.self) { group in
             for (filePath, modules) in removalsByFile {
                 group.addTask {
-                    let lines = try await fileSystem.fileSystem.readLines(atPath: filePath)
+                    let lines = try fileSystem.fileSystem.readLines(atPath: filePath)
                     if let updated = Self.replaceTestableImports(in: lines, modules: modules) {
                         try fileSystem.fileSystem.writeFile(updated, toPath: filePath)
                         return filePath

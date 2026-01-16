@@ -20,7 +20,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryTestableAnalyzing {
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)
         let fileLinesCache = FileLinesCache(
             readLines: { path in
-                try await fileSystemBox.fileSystem.readLines(atPath: path)
+                try fileSystemBox.fileSystem.readLines(atPath: path)
             }
         )
         var mutableTestableImportsByFile: [String: Set<String>] = [:]
@@ -264,19 +264,19 @@ private struct RelatedSymbolSnapshot: Sendable {
 
 private actor FileLinesCache {
     private var cache: [String: [String]] = [:]
-    private let readLines: @Sendable (String) async throws -> [String]
+    private let readLines: @Sendable (String) throws -> [String]
 
     init(
-        readLines: @escaping @Sendable (String) async throws -> [String]
+        readLines: @escaping @Sendable (String) throws -> [String]
     ) {
         self.readLines = readLines
     }
 
-    func lines(for file: String) async -> [String] {
+    func lines(for file: String) -> [String] {
         if let cached = cache[file] {
             return cached
         }
-        let lines = (try? await readLines(file)) ?? []
+        let lines = (try? readLines(file)) ?? []
         cache[file] = lines
         return lines
     }

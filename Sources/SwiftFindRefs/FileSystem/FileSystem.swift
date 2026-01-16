@@ -54,4 +54,21 @@ final class FileSystem: FileSystemProvider {
             options: mask
         )
     }
+
+    func readFile(atPath path: String) throws -> String {
+        try String(contentsOfFile: path)
+    }
+
+    func readLines(atPath path: String) async throws -> [String] {
+        let url = URL(fileURLWithPath: path)
+        var lines: [String] = []
+        for try await line in url.resourceBytes.lines {
+            lines.append(line)
+        }
+        return lines
+    }
+
+    func writeFile(_ contents: String, toPath path: String) throws {
+        try contents.write(toFile: path, atomically: true, encoding: .utf8)
+    }
 }

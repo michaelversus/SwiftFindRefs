@@ -12,14 +12,15 @@
 - `-d, --derivedDataPath`
   Points directly to a DerivedData (or IndexStoreDB) directory and skips discovery.
 
+- `-v, --verbose` (flag, no value required)
+  Enables verbose output for diagnostic purposes.
+
+## Search subcommand flags
 - `-n, --symbolName` (required)
   The symbol to inspect.
 
 - `-t, --symbolType`
   Narrows matches to a specific kind (recommended when possible).
-
-- `-v, --verbose`
-  Prints discovery steps, resolved paths, and diagnostics.
 
 ## Recommended invocations
 

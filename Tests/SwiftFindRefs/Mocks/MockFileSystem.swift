@@ -7,24 +7,37 @@ final class MockFileSystem: FileSystemProvider {
     private let libraryDirectoryURL: URL
     private let contentsOfDirectoryResults: [URL: [URL]]
     private let contentsOfDirectoryError: Error?
+    private let readFileResults: [String: String]
+    private let readFileError: Error?
+    private let writeFileError: Error?
     var actions: [Action] = []
+    var writtenFiles: [String: String] = [:]
 
     enum Action: Equatable {
         case fileExists(atPath: String)
         case libraryDirectory
         case contentsOfDirectory(at: URL, includingPropertiesForKeys: [URLResourceKey])
+        case readFile(atPath: String)
+        case readLines(atPath: String)
+        case writeFile(atPath: String, contents: String)
     }
 
     init(
         fileExistsResults: [String: Bool] = [:],
         libraryDirectoryURL: URL = URL(fileURLWithPath: "/mock/library/directory"),
         contentsOfDirectoryResults: [URL: [URL]] = [:],
-        contentsOfDirectoryError: Error? = nil
+        contentsOfDirectoryError: Error? = nil,
+        readFileResults: [String: String] = [:],
+        readFileError: Error? = nil,
+        writeFileError: Error? = nil
     ) {
         self.fileExistsResults = fileExistsResults
         self.libraryDirectoryURL = libraryDirectoryURL
         self.contentsOfDirectoryResults = contentsOfDirectoryResults
         self.contentsOfDirectoryError = contentsOfDirectoryError
+        self.readFileResults = readFileResults
+        self.readFileError = readFileError
+        self.writeFileError = writeFileError
     }
 
     func fileExists(atPath path: String) -> Bool {
@@ -47,5 +60,30 @@ final class MockFileSystem: FileSystemProvider {
             throw error
         }
         return contentsOfDirectoryResults[url] ?? []
+    }
+
+    func readFile(atPath path: String) throws -> String {
+        actions.append(.readFile(atPath: path))
+        if let error = readFileError {
+            throw error
+        }
+        return readFileResults[path] ?? ""
+    }
+
+    func readLines(atPath path: String) async throws -> [String] {
+        actions.append(.readLines(atPath: path))
+        if let error = readFileError {
+            throw error
+        }
+        let contents = readFileResults[path] ?? ""
+        return contents.components(separatedBy: .newlines)
+    }
+
+    func writeFile(_ contents: String, toPath path: String) throws {
+        actions.append(.writeFile(atPath: path, contents: contents))
+        if let error = writeFileError {
+            throw error
+        }
+        writtenFiles[path] = contents
     }
 }

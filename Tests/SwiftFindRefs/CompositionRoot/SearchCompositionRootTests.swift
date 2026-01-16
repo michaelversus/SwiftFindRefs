@@ -1,8 +1,8 @@
 import Testing
 @testable import SwiftFindRefs
 
-@Suite("CompositionRoot Tests")
-struct CompositionRootTests {
+@Suite("SearchCompositionRoot Tests")
+struct SearchCompositionRootTests {
 
     // MARK: - Tests
 
@@ -10,7 +10,7 @@ struct CompositionRootTests {
     func test_run_WithMissingInputs_throwsMissingInputsError() async {
         // Given
         let fileSystem = MockFileSystem()
-        let sut = makeSUT(
+        let sut = makeSearchSUT(
             projectName: nil,
             derivedDataPath: nil,
             symbolType: "class",
@@ -34,7 +34,7 @@ struct CompositionRootTests {
         // Given
         let invalidPath = "/invalid/DerivedData"
         let fileSystem = MockFileSystem(fileExistsResults: [invalidPath: false])
-        let sut = makeSUT(
+        let sut = makeSearchSUT(
             projectName: "Project",
             derivedDataPath: invalidPath,
             symbolType: "class",
@@ -61,7 +61,7 @@ struct CompositionRootTests {
         let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
         var standardMessages: [String] = []
         var verboseMessages: [String] = []
-        let sut = makeSUT(
+        let sut = makeSearchSUT(
             projectName: "Project",
             derivedDataPath: derivedDataPath,
             symbolType: nil,
@@ -85,7 +85,7 @@ struct CompositionRootTests {
 
     // MARK: - Helpers
 
-    private func makeSUT(
+    private func makeSearchSUT(
         projectName: String?,
         derivedDataPath: String?,
         symbolName: String = "MySymbol",
@@ -93,8 +93,8 @@ struct CompositionRootTests {
         fileSystem: MockFileSystem,
         print: @escaping (String) -> Void = { _ in },
         vPrint: @escaping (String) -> Void = { _ in }
-    ) -> CompositionRoot {
-        CompositionRoot(
+    ) -> SearchCompositionRoot {
+        SearchCompositionRoot(
             projectName: projectName,
             derivedDataPath: derivedDataPath,
             symbolName: symbolName,

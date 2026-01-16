@@ -36,4 +36,20 @@ extension SymbolOccurrence: SymbolOccurrenceProviding {
     var symbolMatching: SymbolMatching {
         symbol
     }
+
+    var locationLine: Int {
+        location.line
+    }
+
+    var symbolUSR: String {
+        symbol.usr
+    }
+
+    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void) {
+        forEach { symbol, roles in
+            callback(symbol, roles)
+        }
+    }
 }
+
+extension Symbol: RelatedSymbolProviding {}

@@ -26,4 +26,18 @@ protocol FileSystemProvider {
         includingPropertiesForKeys keys: [URLResourceKey]?,
         options mask: FileManager.DirectoryEnumerationOptions
     ) throws -> [URL]
+
+    /// Reads the contents of a file as a string.
+    /// - Parameter path: A file path (absolute or relative).
+    func readFile(atPath path: String) throws -> String
+
+    /// Reads the contents of a file as lines asynchronously.
+    /// - Parameter path: A file path (absolute or relative).
+    func readLines(atPath path: String) async throws -> [String]
+
+    /// Writes the contents to a file path.
+    /// - Parameters:
+    ///   - contents: The string to write.
+    ///   - path: A file path (absolute or relative).
+    func writeFile(_ contents: String, toPath path: String) throws
 }

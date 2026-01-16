@@ -32,7 +32,7 @@ swiftfindrefs \
 
 Optional flags:
 - `--derivedDataPath <path>`: explicit DerivedData (or IndexStoreDB) path; skips discovery
-- `--verbose`: prints discovery steps, resolved paths, and diagnostics
+- `-v, --verbose`: enables verbose output for diagnostic purposes (flag, no value required)
 
 ## Output contract
 - One absolute file path per line

@@ -10,7 +10,7 @@
 
 ## Wrong DerivedData selected
 - Prefer explicit `--derivedDataPath` in CI or multi-clone setups.
-- Use `--verbose` to confirm path selection.
+- Use `-v` or `--verbose` flag to confirm path selection.
 
 ## Do not fall back to grep
 - Text search is not acceptable for reference discovery.

@@ -1,6 +1,6 @@
 import Foundation
 
-struct UnnecessaryTestableRewriter: UnnecessaryTestableRewriting {
+struct UnnecessaryTestableRewriter: UnnecessaryRewriting {
     private let fileSystem: FileSystemProvider
     private let print: (String) -> Void
 

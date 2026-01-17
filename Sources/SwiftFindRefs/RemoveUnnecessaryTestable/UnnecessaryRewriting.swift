@@ -1,5 +1,5 @@
 import Foundation
 
-protocol UnnecessaryTestableRewriting {
+protocol UnnecessaryRewriting {
     func rewriteFiles(_ removalsByFile: [String: Set<String>]) async throws -> [String]
 }

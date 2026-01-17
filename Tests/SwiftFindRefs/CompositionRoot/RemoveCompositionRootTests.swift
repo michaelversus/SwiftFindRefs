@@ -91,7 +91,7 @@ struct RemoveCompositionRootTests {
         fileSystem: MockFileSystem,
         print: @escaping (String) -> Void = { _ in },
         vPrint: @escaping (String) -> Void = { _ in },
-        removerFactory: @escaping (String) -> UnnecessaryTestableRemoving
+        removerFactory: @escaping (String) -> UnnecessaryRemoving
     ) -> RemoveCompositionRoot {
         RemoveCompositionRoot(
             projectName: projectName,
@@ -106,7 +106,7 @@ struct RemoveCompositionRootTests {
     }
 }
 
-private struct MockRemover: UnnecessaryTestableRemoving {
+private struct MockRemover: UnnecessaryRemoving {
     let result: [String]
 
     func run() async throws -> [String] {

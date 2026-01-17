@@ -9,7 +9,7 @@ struct RemoveCompositionRoot {
     let vPrint: (String) -> Void
     let fileSystem: FileSystemProvider
     let derivedDataLocator: DerivedDataLocatorProtocol
-    let removerFactory: (String) -> UnnecessaryTestableRemoving
+    let removerFactory: (String) -> UnnecessaryRemoving
 
     func run() async throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(

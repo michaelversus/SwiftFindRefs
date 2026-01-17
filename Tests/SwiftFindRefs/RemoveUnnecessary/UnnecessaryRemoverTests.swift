@@ -1,8 +1,8 @@
 import Testing
 @testable import SwiftFindRefs
 
-@Suite("UnnecessaryTestableRemover Tests")
-struct UnnecessaryTestableRemoverTests {
+@Suite("UnnecessaryRemover Tests")
+struct UnnecessaryRemoverTests {
     @Test("run uses analyzer and rewriter and returns updated files")
     func test_run_UsesAnalyzerAndRewriter() async throws {
         // Given
@@ -10,12 +10,13 @@ struct UnnecessaryTestableRemoverTests {
         let analyzer = MockAnalyzer(result: ["/mock/Test.swift": ["ModuleA"]])
         let rewriter = MockRewriter(result: ["/mock/Test.swift"])
         var messages: [String] = []
-        let sut = UnnecessaryTestableRemover(
+        let sut = UnnecessaryRemover(
             indexStorePath: indexStorePath,
             print: { messages.append($0) },
             storeFactory: { DummyStore() },
             analyzer: analyzer,
-            rewriter: rewriter
+            rewriter: rewriter,
+            mode: .testableImports
         )
 
         // When
@@ -36,12 +37,13 @@ struct UnnecessaryTestableRemoverTests {
         let indexStorePath = "/mock/index"
         let analyzer = MockAnalyzer(result: [:])
         let rewriter = MockRewriter(result: [])
-        let sut = UnnecessaryTestableRemover(
+        let sut = UnnecessaryRemover(
             indexStorePath: indexStorePath,
             print: { _ in },
             storeFactory: { throw TestError.sample },
             analyzer: analyzer,
-            rewriter: rewriter
+            rewriter: rewriter,
+            mode: .testableImports
         )
 
         // When
@@ -75,7 +77,7 @@ private struct DummyStore: IndexStoreProviding {
     }
 }
 
-private final class MockAnalyzer: UnnecessaryTestableAnalyzing {
+private final class MockAnalyzer: UnnecessaryAnalyzing {
     private let result: [String: Set<String>]
     private(set) var calls = 0
     private(set) var lastIndexStorePath: String?
@@ -92,7 +94,7 @@ private final class MockAnalyzer: UnnecessaryTestableAnalyzing {
     }
 }
 
-private final class MockRewriter: UnnecessaryTestableRewriting {
+private final class MockRewriter: UnnecessaryRewriting {
     private let result: [String]
     private(set) var calls = 0
     private(set) var lastRemovals: [String: Set<String>]?

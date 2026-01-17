@@ -1,7 +1,7 @@
 import Foundation
 @preconcurrency import IndexStore
 
-struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
+struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
     private let fileSystem: FileSystemProvider
     private let extractor: TestableImportExtracting
 

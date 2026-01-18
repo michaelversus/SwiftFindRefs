@@ -12,32 +12,38 @@ protocol FileSystemProvider {
     func fileExists(atPath path: String) -> Bool
 
     /// Returns the URL of the user's Library directory.
+    /// - Returns: Absolute URL for the Library directory in the current user domain.
     func libraryDirectory() -> URL
 
     /// Returns the contents of the directory at the specified URL.
     /// - Parameters:
-    ///  - url: The URL of the directory to read.
-    ///  - keys: An array of resource keys to prefetch for each item.
-    ///  - mask: Options for directory enumeration.
-    ///  - Returns: An array of URLs for the items in the directory.
-    ///  - Throws: An error if the directory cannot be read.
+    ///   - url: The URL of the directory to read.
+    ///   - keys: Resource keys to prefetch for each item.
+    ///   - mask: Directory enumeration options that shape traversal behavior.
+    /// - Returns: URLs for each item found in the directory.
+    /// - Throws: An error if the directory cannot be read.
     func contentsOfDirectory(
         at url: URL,
         includingPropertiesForKeys keys: [URLResourceKey]?,
         options mask: FileManager.DirectoryEnumerationOptions
     ) throws -> [URL]
 
-    /// Reads the contents of a file as a string.
+    /// Reads the contents of a file as a UTF-8 string.
     /// - Parameter path: A file path (absolute or relative).
+    /// - Returns: Entire file contents as a single string.
+    /// - Throws: An error if the file cannot be read or decoded as UTF-8.
     func readFile(atPath path: String) throws -> String
 
-    /// Reads the contents of a file as lines.
+    /// Reads the contents of a file as an array of lines.
     /// - Parameter path: A file path (absolute or relative).
+    /// - Returns: Strings representing each line, preserving empty lines.
+    /// - Throws: An error if the file cannot be read.
     func readLines(atPath path: String) throws -> [String]
 
-    /// Writes the contents to a file path.
+    /// Writes the provided contents to a file path using UTF-8 encoding.
     /// - Parameters:
     ///   - contents: The string to write.
     ///   - path: A file path (absolute or relative).
+    /// - Throws: An error if the contents cannot be written to disk.
     func writeFile(_ contents: String, toPath path: String) throws
 }

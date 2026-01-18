@@ -1,6 +1,7 @@
 import Foundation
 @preconcurrency import IndexStore
 
+/// Composition root responsible for constructing the removal pipeline with derived data context.
 struct RemoveCompositionRoot {
     let projectName: String?
     let derivedDataPath: String?
@@ -11,6 +12,7 @@ struct RemoveCompositionRoot {
     let derivedDataLocator: DerivedDataLocatorProtocol
     let removerFactory: (String) -> UnnecessaryRemoving
 
+    /// Resolves the derived data paths, builds the remover, and reports updated files.
     func run() async throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(
             projectName: projectName,

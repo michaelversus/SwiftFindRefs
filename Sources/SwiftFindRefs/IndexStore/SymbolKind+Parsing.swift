@@ -1,6 +1,9 @@
 import IndexStore
 
 extension SymbolKind {
+    /// Attempts to convert a textual symbol kind description into the corresponding `SymbolKind` value.
+    /// - Parameter type: Case-insensitive textual description such as "class", "function", or "instanceMethod".
+    /// - Returns: The matching `SymbolKind` or `nil` when the provided text is unsupported.
     init?(parsing type: String) {
         switch type.lowercased() {
         case "class": self = .class

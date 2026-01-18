@@ -1,5 +1,6 @@
 import Foundation
 
+/// Composition root that wires the dependencies required to perform a symbol reference search.
 struct SearchCompositionRoot {
     let projectName: String?
     let derivedDataPath: String?
@@ -10,6 +11,7 @@ struct SearchCompositionRoot {
     let fileSystem: FileSystemProvider
     let derivedDataLocator: DerivedDataLocatorProtocol
 
+    /// Resolves derived data paths, configures the finder, and prints the located references.
     func run() async throws {
         let derivedDataPaths = try derivedDataLocator.locateDerivedData(
             projectName: projectName,

@@ -1,14 +1,20 @@
 import Foundation
 
+/// Applies the discovered unused import information by editing source files accordingly.
 struct UnnecessaryImportsRewriter: UnnecessaryRewriting {
     private let fileSystem: FileSystemProvider
     private let print: (String) -> Void
 
+    /// Creates a rewriter that operates through the provided file system and logging callback.
     init(fileSystem: FileSystemProvider, print: @escaping (String) -> Void) {
         self.fileSystem = fileSystem
         self.print = print
     }
 
+    /// Removes the unused imports for each file and reports which files were modified.
+    ///
+    /// - Parameter removalsByFile: Files mapped to the set of module imports that can be removed.
+    /// - Returns: The list of file paths that were updated.
     func rewriteFiles(_ removalsByFile: [String: Set<String>]) async throws -> [String] {
         let fileSystem = FileSystemBox(fileSystem: self.fileSystem)
         let print = PrintBox(print: self.print)
@@ -36,6 +42,12 @@ struct UnnecessaryImportsRewriter: UnnecessaryRewriting {
         }
     }
 
+    /// Filters import statements to remove modules that no longer have references.
+    ///
+    /// - Parameters:
+    ///   - lines: The source file split into lines.
+    ///   - modules: The set of module names that should be retained as unused imports.
+    /// - Returns: The updated file body if removals occurred; otherwise `nil`.
     private static func replaceUnusedImports(in lines: [String], modules: Set<String>) -> String? {
         var retainedLines: [String] = []
         var hasChanges = false

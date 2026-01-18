@@ -1,11 +1,13 @@
 import Foundation
 @preconcurrency import IndexStore
 
+/// Analyzes testable import statements to find those that are not required for any referenced symbols.
 struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
     private let fileSystem: any FileSystemProvider
     private let extractor: any ImportExtracting
     private let collector: any IndexStoreCollecting.Type
 
+    /// Initializes an analyzer with the collaborators needed to walk imports and index store data.
     init(
         fileSystem: FileSystemProvider,
         extractor: ImportExtracting,
@@ -16,6 +18,13 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         self.collector = collector
     }
 
+    /// Returns a mapping from file paths to the set of `@testable` imports that are not required by any referenced symbol.
+    ///
+    /// - Parameters:
+    ///   - store: The index store providing symbol information.
+    ///   - indexStorePath: The file-system path to the index store.
+    /// - Returns: A dictionary keyed by source file path containing unnecessary `@testable` module names.
+    /// - Throws: Propagates errors from the collector, extractor, or file system, and `RemoveError` when the index store lacks data for a declared testable module.
     func analyze(store: some IndexStoreProviding, indexStorePath: String) async throws -> [String: Set<String>] {
         let (units, occurrencesByFile) = try collector.collectUnitsAndRecords(from: store, indexStorePath: indexStorePath)
         let unitSnapshots = units.map { UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName) }
@@ -124,6 +133,13 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         }
     }
 
+    /// Determines whether a recorded occurrence should be treated as public for filtering purposes.
+    /// - Parameters:
+    ///  - file: The source file path containing the occurrence.
+    ///  - occurrence: The occurrence snapshot to evaluate.
+    ///  - isOverride: Indicates whether the occurrence represents an override of a superclass method.
+    ///  - fileLinesCache: A cache for reading lines from source files.
+    ///  - Returns: `true` when the occurrence is considered public; otherwise `false`.
     private static func isPublic(
         file: String,
         occurrence: OccurrenceSnapshot,
@@ -148,6 +164,9 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         return isPublic && !text.contains(" internal(")
     }
 
+    /// Returns `true` when an occurrence represents a member of a protocol so its visibility can be ignored.
+    /// - Parameter occurrence: The occurrence snapshot to evaluate.
+    /// - Returns: `true` when the occurrence is a protocol child; otherwise `false`.
     private static func isChildOfProtocol(occurrence: OccurrenceSnapshot) -> Bool {
         let protocolChildrenTypes: [SymbolKind] = [
             .instanceMethod, .classMethod, .staticMethod,
@@ -165,6 +184,9 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         return false
     }
 
+    /// Returns `true` for occurrences that are getter/setter accessors rather than standalone functions.
+    /// - Parameter occurrence: The occurrence snapshot to evaluate.
+    /// - Returns: `true` when the occurrence is a getter or setter; otherwise `false`.
     private static func isGetterOrSetterFunction(occurrence: OccurrenceSnapshot) -> Bool {
         let functionTypes: [SymbolKind] = [.classMethod, .instanceMethod, .staticMethod]
         guard functionTypes.contains(occurrence.symbolKind) else {

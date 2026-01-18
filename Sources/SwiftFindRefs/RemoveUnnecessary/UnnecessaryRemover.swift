@@ -35,9 +35,8 @@ struct UnnecessaryRemover {
         do {
             store = try storeFactory()
         } catch {
-            throw UnnecessaryTestableError.failedToOpenIndexStore(indexStorePath)
+            throw RemoveError.failedToOpenIndexStore(indexStorePath)
         }
-
         let removalsByFile = try await analyzer.analyze(store: store, indexStorePath: indexStorePath)
         guard !removalsByFile.isEmpty else {
             return []

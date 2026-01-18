@@ -47,7 +47,7 @@ struct UnnecessaryRemoverTests {
         )
 
         // When
-        let error = await #expect(throws: UnnecessaryTestableError.self) {
+        let error = await #expect(throws: RemoveError.self) {
             _ = try await sut.run()
         }
 

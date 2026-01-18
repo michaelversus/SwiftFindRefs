@@ -2,19 +2,22 @@ import Foundation
 @preconcurrency import IndexStore
 
 struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
-    private let fileSystem: FileSystemProvider
-    private let extractor: TestableImportExtracting
+    private let fileSystem: any FileSystemProvider
+    private let extractor: any ImportExtracting
+    private let collector: any IndexStoreCollecting.Type
 
     init(
         fileSystem: FileSystemProvider,
-        extractor: TestableImportExtracting,
+        extractor: ImportExtracting,
+        collector: any IndexStoreCollecting.Type
     ) {
         self.fileSystem = fileSystem
         self.extractor = extractor
+        self.collector = collector
     }
 
     func analyze(store: some IndexStoreProviding, indexStorePath: String) async throws -> [String: Set<String>] {
-        let (units, occurrencesByFile) = try collectUnitsAndRecords(store: store, indexStorePath: indexStorePath)
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords(from: store, indexStorePath: indexStorePath)
         let unitSnapshots = units.map { UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName) }
         let unitsByModule = Dictionary(grouping: unitSnapshots, by: \.moduleName)
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)
@@ -24,8 +27,8 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
             }
         )
         var mutableTestableImportsByFile: [String: Set<String>] = [:]
-        for unit in unitSnapshots where !Self.isGeneratedFile(unit.mainFile) {
-            let testableImports = try await extractor.testableImports(inFile: unit.mainFile)
+        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) {
+            let testableImports = try await extractor.imports(inFile: unit.mainFile)
             if !testableImports.isEmpty {
                 mutableTestableImportsByFile[unit.mainFile] = testableImports
             }
@@ -35,7 +38,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
                 group.addTask {
-                    if Self.isGeneratedFile(unit.mainFile) {
+                    if FileValidation.isGeneratedFile(unit.mainFile) {
                         return nil
                     }
 
@@ -44,7 +47,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
                         return nil
                     }
 
-                    let (referencedUSRs, overrideUSRs) = Self.getReferenceUSRs(
+                    let (referencedUSRs, overrideUSRs) = SymbolReferenceResolver.getReferenceUSRs(
                         mainFile: unit.mainFile,
                         occurrencesByFile: occurrencesByFile
                     )
@@ -94,7 +97,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
 
                     let missingTestableModules = testableImports.subtracting(seenModules)
                     if !missingTestableModules.isEmpty {
-                        throw UnnecessaryTestableError.missingModuleInIndex(
+                        throw RemoveError.missingModuleInIndex(
                             file: unit.mainFile,
                             modules: missingTestableModules
                         )
@@ -119,79 +122,6 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
             }
             return results
         }
-    }
-
-    private static func getReferenceUSRs(
-        mainFile: String,
-        occurrencesByFile: [String: [OccurrenceSnapshot]]
-    ) -> (Set<String>, Set<String>) {
-        guard let occurrences = occurrencesByFile[mainFile] else {
-            return ([], [])
-        }
-
-        var usrs = Set<String>()
-        var overrideUSRs = Set<String>()
-        for occurrence in occurrences {
-            if occurrence.roles.contains(.reference) {
-                usrs.insert(occurrence.symbolUSR)
-                if occurrence.roles.contains(.overrideOf) || occurrence.roles.contains(.baseOf) {
-                    overrideUSRs.insert(occurrence.symbolUSR)
-                }
-            }
-        }
-
-        return (usrs, overrideUSRs)
-    }
-
-    private func collectUnitsAndRecords(
-        store: some IndexStoreProviding,
-        indexStorePath: String
-    ) throws -> ([UnitReaderProviding], [String: [OccurrenceSnapshot]]) {
-        var units: [UnitReaderProviding] = []
-        var occurrencesByFile: [String: [OccurrenceSnapshot]] = [:]
-        store.forEachUnit { unitReader in
-            if unitReader.mainFile.isEmpty {
-                return
-            }
-
-            units.append(unitReader)
-            if let recordName = unitReader.recordName,
-               let recordReader = try? store.recordReader(for: recordName) {
-                // IndexStore can return multiple units for the same file (e.g. multiple targets);
-                // keep the first record to avoid failing when duplicates exist.
-                if occurrencesByFile[unitReader.mainFile] == nil {
-                    var occurrences: [OccurrenceSnapshot] = []
-                    recordReader.forEachOccurrence { occurrence in
-                        var relatedSymbols: [RelatedSymbolSnapshot] = []
-                        occurrence.forEachRelatedSymbol { symbol, roles in
-                            relatedSymbols.append(
-                                RelatedSymbolSnapshot(kind: symbol.kind, roles: roles)
-                            )
-                        }
-                        occurrences.append(
-                            OccurrenceSnapshot(
-                                symbolKind: occurrence.symbolMatching.kind,
-                                roles: occurrence.roles,
-                                locationLine: occurrence.locationLine,
-                                symbolUSR: occurrence.symbolUSR,
-                                relatedSymbols: relatedSymbols
-                            )
-                        )
-                    }
-                    occurrencesByFile[unitReader.mainFile] = occurrences
-                }
-            }
-        }
-
-        guard !units.isEmpty else {
-            throw UnnecessaryTestableError.failedToLoadUnits(indexStorePath)
-        }
-
-        return (units, occurrencesByFile)
-    }
-
-    private static func isGeneratedFile(_ path: String) -> Bool {
-        path.hasSuffix(".generated.swift")
     }
 
     private static func isPublic(
@@ -242,47 +172,4 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         }
         return occurrence.roles.contains(.accessorOf)
     }
-}
-
-private struct OccurrenceSnapshot: Sendable {
-    let symbolKind: SymbolKind
-    let roles: SymbolRoles
-    let locationLine: Int
-    let symbolUSR: String
-    let relatedSymbols: [RelatedSymbolSnapshot]
-}
-
-private struct UnitSnapshot: Sendable {
-    let mainFile: String
-    let moduleName: String
-}
-
-private struct RelatedSymbolSnapshot: Sendable {
-    let kind: SymbolKind
-    let roles: SymbolRoles
-}
-
-private actor FileLinesCache {
-    private var cache: [String: [String]] = [:]
-    private let readLines: @Sendable (String) throws -> [String]
-
-    init(
-        readLines: @escaping @Sendable (String) throws -> [String]
-    ) {
-        self.readLines = readLines
-    }
-
-    func lines(for file: String) -> [String] {
-        if let cached = cache[file] {
-            return cached
-        }
-        let lines = (try? readLines(file)) ?? []
-        cache[file] = lines
-        return lines
-    }
-}
-
-private struct FileSystemBox: @unchecked Sendable {
-    // FileManager is thread-safe for concurrent reads across different files.
-    let fileSystem: FileSystemProvider
 }

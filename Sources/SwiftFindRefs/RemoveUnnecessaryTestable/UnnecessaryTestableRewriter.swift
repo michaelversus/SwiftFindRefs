@@ -12,7 +12,7 @@ struct UnnecessaryTestableRewriter: UnnecessaryRewriting {
     func rewriteFiles(_ removalsByFile: [String: Set<String>]) async throws -> [String] {
         let fileSystem = FileSystemBox(fileSystem: self.fileSystem)
         let print = PrintBox(print: self.print)
-        print.print("Rewriting files: \(removalsByFile.count)")
+        print.print("Removing unnecessary @testable imports for \(removalsByFile.count) files...")
 
         return try await withThrowingTaskGroup(of: String?.self) { group in
             for (filePath, modules) in removalsByFile {
@@ -58,16 +58,4 @@ struct UnnecessaryTestableRewriter: UnnecessaryRewriting {
 
         return updatedLines?.joined(separator: "\n")
     }
-}
-
-// MARK: - Sendable wrappers
-
-private struct FileSystemBox: @unchecked Sendable {
-    // FileManager is thread-safe for concurrent reads/writes to different files.
-    let fileSystem: FileSystemProvider
-}
-
-private struct PrintBox: @unchecked Sendable {
-    // Printing is treated as fire-and-forget logging for parallel tasks.
-    let print: (String) -> Void
 }

@@ -43,7 +43,8 @@ struct UnnecessaryTestableAnalyzerTests {
         ])
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor
+            extractor: extractor,
+            collector: IndexStoreCollector.self
         )
 
         // When
@@ -91,7 +92,8 @@ struct UnnecessaryTestableAnalyzerTests {
         ])
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor
+            extractor: extractor,
+            collector: IndexStoreCollector.self
         )
 
         // When
@@ -121,11 +123,12 @@ struct UnnecessaryTestableAnalyzerTests {
         ])
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor
+            extractor: extractor,
+            collector: IndexStoreCollector.self
         )
 
         // When
-        let error = await #expect(throws: UnnecessaryTestableError.self) {
+        let error = await #expect(throws: RemoveError.self) {
             _ = try await sut.analyze(store: store, indexStorePath: "/index")
         }
 
@@ -178,7 +181,8 @@ struct UnnecessaryTestableAnalyzerTests {
         ])
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor
+            extractor: extractor,
+            collector: IndexStoreCollector.self
         )
 
         // When
@@ -196,11 +200,12 @@ struct UnnecessaryTestableAnalyzerTests {
         let extractor = MockTestableImportExtractor(resultsByFile: [:])
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor
+            extractor: extractor,
+            collector: IndexStoreCollector.self
         )
 
         // When
-        let error = await #expect(throws: UnnecessaryTestableError.self) {
+        let error = await #expect(throws: RemoveError.self) {
             _ = try await sut.analyze(store: store, indexStorePath: "/index")
         }
 
@@ -298,10 +303,10 @@ private struct MockIndexStore: IndexStoreProviding, Sendable {
     }
 }
 
-private struct MockTestableImportExtractor: TestableImportExtracting, Sendable {
+private struct MockTestableImportExtractor: ImportExtracting, Sendable {
     let resultsByFile: [String: Set<String>]
 
-    func testableImports(inFile path: String) async throws -> Set<String> {
+    func imports(inFile path: String) async throws -> Set<String> {
         resultsByFile[path] ?? []
     }
 }

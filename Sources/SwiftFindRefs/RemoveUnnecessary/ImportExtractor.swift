@@ -1,21 +1,28 @@
 import Foundation
 
-struct TestableImportExtractor: TestableImportExtracting {
+struct ImportExtractor: ImportExtracting {
     private let fileSystem: FileSystemProvider
     private let excludeCompilationConditionals: Bool
-    private let testablePrefix = "@testable import "
+    private let prefix: Prefix
+
+    enum Prefix: String {
+        case testableImport = "@testable import "
+        case regularImport = "import "
+    }
 
     init(
         fileSystem: FileSystemProvider,
-        excludeCompilationConditionals: Bool
+        excludeCompilationConditionals: Bool,
+        prefix: Prefix
     ) {
         self.fileSystem = fileSystem
         self.excludeCompilationConditionals = excludeCompilationConditionals
+        self.prefix = prefix
     }
 
-    func testableImports(inFile path: String) async throws -> Set<String> {
+    func imports(inFile path: String) async throws -> Set<String> {
         let lines = try fileSystem.readLines(atPath: path)
-        var testableImports = Set<String>()
+        var imports = Set<String>()
         var conditionalDepth = 0
 
         for line in lines {
@@ -32,18 +39,18 @@ struct TestableImportExtractor: TestableImportExtracting {
                 continue
             }
 
-            if trimmed.hasPrefix(testablePrefix) {
+            if trimmed.hasPrefix(prefix.rawValue) {
                 if excludeCompilationConditionals && conditionalDepth > 0 {
                     continue
                 }
-                let modulePart = trimmed.dropFirst(testablePrefix.count)
+                let modulePart = trimmed.dropFirst(prefix.rawValue.count)
                 let moduleName = modulePart.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "." }).first
                 if let moduleName {
-                    testableImports.insert(String(moduleName))
+                    imports.insert(String(moduleName))
                 }
             }
         }
 
-        return testableImports
+        return imports
     }
 }

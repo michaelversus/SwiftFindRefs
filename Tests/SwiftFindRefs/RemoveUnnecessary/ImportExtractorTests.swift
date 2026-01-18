@@ -1,8 +1,8 @@
 import Testing
 @testable import SwiftFindRefs
 
-@Suite("TestableImportExtractor Tests")
-struct TestableImportExtractorTests {
+@Suite("ImportExtractor Tests")
+struct ImportExtractorTests {
     @Test("extracts @testable imports from file")
     func test_extractsTestableImports() async throws {
         // Given
@@ -14,13 +14,14 @@ struct TestableImportExtractorTests {
         import ModuleC
         """
         let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
-        let sut = TestableImportExtractor(
+        let sut = ImportExtractor(
             fileSystem: fileSystem,
-            excludeCompilationConditionals: false
+            excludeCompilationConditionals: false,
+            prefix: .testableImport
         )
 
         // When
-        let imports = try await sut.testableImports(inFile: filePath)
+        let imports = try await sut.imports(inFile: filePath)
 
         // Then
         #expect(imports == ["ModuleA", "ModuleB"])
@@ -41,13 +42,14 @@ struct TestableImportExtractorTests {
         @testable import AlwaysIncluded
         """
         let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
-        let sut = TestableImportExtractor(
+        let sut = ImportExtractor(
             fileSystem: fileSystem,
-            excludeCompilationConditionals: true
+            excludeCompilationConditionals: true,
+            prefix: .testableImport
         )
 
         // When
-        let imports = try await sut.testableImports(inFile: filePath)
+        let imports = try await sut.imports(inFile: filePath)
 
         // Then
         #expect(imports == ["AlwaysIncluded"])
@@ -67,13 +69,14 @@ struct TestableImportExtractorTests {
         #endif
         """
         let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
-        let sut = TestableImportExtractor(
+        let sut = ImportExtractor(
             fileSystem: fileSystem,
-            excludeCompilationConditionals: false
+            excludeCompilationConditionals: false,
+            prefix: .testableImport
         )
 
         // When
-        let imports = try await sut.testableImports(inFile: filePath)
+        let imports = try await sut.imports(inFile: filePath)
 
         // Then
         #expect(imports == ["Stoiximan", "Betano", "BetanoCasinoBE"])

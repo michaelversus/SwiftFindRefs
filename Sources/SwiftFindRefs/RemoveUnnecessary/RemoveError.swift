@@ -1,6 +1,6 @@
 import Foundation
 
-enum UnnecessaryTestableError: Error, LocalizedError {
+enum RemoveError: Error, LocalizedError {
     case failedToOpenIndexStore(String)
     case failedToLoadUnits(String)
     case duplicateRecord(String)
@@ -16,7 +16,7 @@ enum UnnecessaryTestableError: Error, LocalizedError {
         case .duplicateRecord(let file):
             return "Found duplicate record for \(file)."
         case .missingModuleInIndex(let file, let modules):
-            return "Some modules imported with @testable were not included in the index \(file): \(modules)"
+            return "Some modules imported with were not included in the index \(file): \(modules)"
         case .missingSourceLine(let file, let line):
             return "Could not read line \(line) in \(file)."
         }

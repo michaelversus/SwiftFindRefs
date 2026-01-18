@@ -13,8 +13,10 @@ extension SwiftFindRefs {
         @OptionGroup
         var common: CommonOptions
 
-        @Flag(name: .customLong("excludeCompilationConditionals"),
-              help: "Exclude @testable imports inside #if/#elseif/#else/#endif blocks.")
+        @Flag(
+            name: .customLong("excludeCompilationConditionals"),
+            help: "Exclude @testable imports inside #if/#elseif/#else/#endif blocks."
+        )
         var excludeCompilationConditionals: Bool = false
 
         func run() async throws {
@@ -35,10 +37,12 @@ extension SwiftFindRefs {
                         storeFactory: { try IndexStore(path: indexStorePath) },
                         analyzer: UnnecessaryTestableAnalyzer(
                             fileSystem: fileSystem,
-                            extractor: TestableImportExtractor(
+                            extractor: ImportExtractor(
                                 fileSystem: fileSystem,
-                                excludeCompilationConditionals: excludeCompilationConditionals
-                            )
+                                excludeCompilationConditionals: excludeCompilationConditionals,
+                                prefix: .testableImport
+                            ),
+                            collector: IndexStoreCollector.self
                         ),
                         rewriter: UnnecessaryTestableRewriter(fileSystem: fileSystem, print: { print($0) }),
                         mode: .testableImports

@@ -17,6 +17,7 @@ struct ImportExtractorTests {
         let sut = ImportExtractor(
             fileSystem: fileSystem,
             excludeCompilationConditionals: false,
+            ignoredModules: [],
             prefix: .testableImport
         )
 
@@ -45,6 +46,7 @@ struct ImportExtractorTests {
         let sut = ImportExtractor(
             fileSystem: fileSystem,
             excludeCompilationConditionals: true,
+            ignoredModules: [],
             prefix: .testableImport
         )
 
@@ -72,6 +74,7 @@ struct ImportExtractorTests {
         let sut = ImportExtractor(
             fileSystem: fileSystem,
             excludeCompilationConditionals: false,
+            ignoredModules: [],
             prefix: .testableImport
         )
 

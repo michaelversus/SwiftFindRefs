@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import SwiftFindRefs
 
@@ -13,7 +14,7 @@ struct RemoveCompositionRootTests {
             derivedDataPath: invalidPath,
             excludeCompilationConditionals: false,
             fileSystem: fileSystem,
-            removerFactory: { _ in MockRemover(result: []) }
+            removerFactory: { _, _ in MockRemover(result: []) }
         )
 
         // When
@@ -32,8 +33,19 @@ struct RemoveCompositionRootTests {
     @Test("test run prints updated files count when nothing updated")
     func test_run_WhenNoUpdates_PrintsUpdatedCount() async throws {
         // Given
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        
+        let configPath = tempDir.appendingPathComponent(".swift-find-refs.json")
+        try "{\"unusedImports\":{\"ignoredModules\":[]}}".write(to: configPath, atomically: true, encoding: .utf8)
+        
         let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
-        let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
+        let currentDirPath = tempDir.path.hasSuffix("/") ? tempDir.path : tempDir.path + "/"
+        let fileSystem = MockFileSystem(
+            fileExistsResults: [derivedDataPath: true, configPath.path: true],
+            currentDirectoryPath: currentDirPath
+        )
         var printMessages: [String] = []
         let sut = makeRemoveSUT(
             projectName: "Project",
@@ -41,7 +53,7 @@ struct RemoveCompositionRootTests {
             excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
-            removerFactory: { _ in MockRemover(result: []) }
+            removerFactory: { _, _ in MockRemover(result: []) }
         )
 
         // When
@@ -54,8 +66,19 @@ struct RemoveCompositionRootTests {
     @Test("test run prints updated files when remover returns results")
     func test_run_WhenUpdatesExist_PrintsUpdatedFiles() async throws {
         // Given
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        
+        let configPath = tempDir.appendingPathComponent(".swift-find-refs.json")
+        try "{\"unusedImports\":{\"ignoredModules\":[]}}".write(to: configPath, atomically: true, encoding: .utf8)
+        
         let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
-        let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
+        let currentDirPath = tempDir.path.hasSuffix("/") ? tempDir.path : tempDir.path + "/"
+        let fileSystem = MockFileSystem(
+            fileExistsResults: [derivedDataPath: true, configPath.path: true],
+            currentDirectoryPath: currentDirPath
+        )
         var printMessages: [String] = []
         var vPrintMessages: [String] = []
         let updatedFiles = ["/mock/FileA.swift", "/mock/FileB.swift"]
@@ -67,7 +90,7 @@ struct RemoveCompositionRootTests {
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
             vPrint: { vPrintMessages.append($0) },
-            removerFactory: { path in
+            removerFactory: { path, _ in
                 receivedIndexStorePath = path
                 return MockRemover(result: updatedFiles)
             }
@@ -91,11 +114,12 @@ struct RemoveCompositionRootTests {
         fileSystem: MockFileSystem,
         print: @escaping (String) -> Void = { _ in },
         vPrint: @escaping (String) -> Void = { _ in },
-        removerFactory: @escaping (String) -> UnnecessaryRemoving
+        removerFactory: @escaping (String, Configuration) -> UnnecessaryRemoving
     ) -> RemoveCompositionRoot {
         RemoveCompositionRoot(
             projectName: projectName,
             derivedDataPath: derivedDataPath,
+            rootPath: nil,
             excludeCompilationConditionals: excludeCompilationConditionals,
             print: print,
             vPrint: vPrint,

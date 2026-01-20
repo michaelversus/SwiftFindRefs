@@ -38,7 +38,9 @@ enum IndexStoreCollector: IndexStoreCollecting {
                                 symbolKind: occurrence.symbolMatching.kind,
                                 roles: occurrence.roles,
                                 locationLine: occurrence.locationLine,
+                                locationColumn: occurrence.locationColumn,
                                 symbolUSR: occurrence.symbolUSR,
+                                symbolName: occurrence.symbolMatching.name,
                                 relatedSymbols: relatedSymbols
                             )
                         )

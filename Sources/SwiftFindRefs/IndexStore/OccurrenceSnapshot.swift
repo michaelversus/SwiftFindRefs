@@ -8,8 +8,12 @@ struct OccurrenceSnapshot: Sendable {
     let roles: SymbolRoles
     /// 1-based line number where the symbol appears within its source file.
     let locationLine: Int
+    /// 1-based column number where the symbol appears within its source file.
+    let locationColumn: Int
     /// Unique symbol resolution identifier that disambiguates the symbol across modules.
     let symbolUSR: String
+    /// Name of the symbol (e.g., module name for imports, class name for classes).
+    let symbolName: String
     /// Related symbols attached to the occurrence, such as parents or referenced declarations.
     let relatedSymbols: [RelatedSymbolSnapshot]
 }

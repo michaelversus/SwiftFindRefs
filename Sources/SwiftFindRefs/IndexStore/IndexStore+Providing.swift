@@ -48,6 +48,11 @@ extension SymbolOccurrence: SymbolOccurrenceProviding {
     var locationLine: Int {
         location.line
     }
+    
+    /// Source column number where the occurrence resides.
+    var locationColumn: Int {
+        location.column
+    }
 
     /// Unified Symbol Resolution (USR) identifier for the symbol.
     var symbolUSR: String {

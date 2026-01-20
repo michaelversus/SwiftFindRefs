@@ -32,6 +32,7 @@ protocol SymbolOccurrenceProviding {
     var symbolMatching: SymbolMatching { get }
     var roles: SymbolRoles { get }
     var locationLine: Int { get }
+    var locationColumn: Int { get }
     var symbolUSR: String { get }
     func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void)
 }

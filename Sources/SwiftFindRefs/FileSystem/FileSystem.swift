@@ -21,6 +21,12 @@ final class FileSystem: FileSystemProvider {
         self.fileManager = fileManager
     }
 
+    /// The absolute path string of the current working directory.
+    /// Mirrors `FileManager.currentDirectoryPath`.
+    var currentDirectoryPath: String {
+        fileManager.currentDirectoryPath
+    }
+
     // MARK: - File Queries
 
     /// Indicates whether a file or directory exists at the specified path.

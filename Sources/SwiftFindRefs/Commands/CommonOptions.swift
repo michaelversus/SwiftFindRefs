@@ -15,6 +15,19 @@ extension SwiftFindRefs {
         @Flag(name: .shortAndLong, help: "Enable verbose output.")
         var verbose: Bool = false
 
+        /// The path to the `.swift-find-refs.json` configuration file.
+        /// If omitted, the tool attempts to locate a configuration in the current directory.
+        @Option(name: [.short, .customLong("config")], help: "The path of `.swift-find-refs.json`.")
+        var configurationPath: String?
+
+        /// The root path of the project to analyze.
+        /// Defaults to the current working directory when not provided.
+        @Option(
+            name: .shortAndLong,
+            help: "The rootPath of your project. Defaults to current directory."
+        )
+        var rootPath: String?
+
         /// Validates that at least one location hint (project name or derived data path) is provided.
         func validate() throws {
             guard projectName?.isEmpty == false || derivedDataPath?.isEmpty == false else {

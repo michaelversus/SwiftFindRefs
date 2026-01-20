@@ -6,6 +6,9 @@ import Foundation
 /// retrieve standard directory URLs, and enumerate directory contents.
 /// - Note: Returned file path collections use absolute URL string representations for consistency.
 protocol FileSystemProvider {
+    /// The absolute path string of the current working directory.
+    var currentDirectoryPath: String { get }
+    
     /// Indicates whether a file or directory exists at the specified path.
     /// - Parameter path: A file or directory path (absolute or relative).
     /// - Returns: `true` if an item exists at the path; otherwise `false`.

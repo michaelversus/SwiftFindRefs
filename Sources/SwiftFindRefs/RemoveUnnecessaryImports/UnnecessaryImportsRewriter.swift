@@ -74,12 +74,14 @@ struct UnnecessaryImportsRewriter: UnnecessaryRewriting {
                 continue
             }
 
+            // Only remove imports that are in the modules set (unnecessary imports)
             if modules.contains(moduleName) {
-                retainedLines.append(line)
-                continue
+                hasChanges = true
+                continue  // Skip this line (remove the import)
             }
 
-            hasChanges = true
+            // Retain imports that are NOT in the modules set (necessary imports)
+            retainedLines.append(line)
         }
 
         return hasChanges ? retainedLines.joined(separator: "\n") : nil

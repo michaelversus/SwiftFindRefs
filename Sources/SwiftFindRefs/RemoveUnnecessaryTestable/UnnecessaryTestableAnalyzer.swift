@@ -36,7 +36,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
             }
         )
         var mutableTestableImportsByFile: [String: Set<String>] = [:]
-        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) {
+        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) && !FileValidation.isThirdPartyFile(unit.mainFile) {
             let testableImports = try await extractor.imports(inFile: unit.mainFile)
             if !testableImports.isEmpty {
                 mutableTestableImportsByFile[unit.mainFile] = testableImports
@@ -47,7 +47,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
                 group.addTask {
-                    if FileValidation.isGeneratedFile(unit.mainFile) {
+                    if FileValidation.isGeneratedFile(unit.mainFile) || FileValidation.isThirdPartyFile(unit.mainFile) {
                         return nil
                     }
 
@@ -56,7 +56,7 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
                         return nil
                     }
 
-                    let (referencedUSRs, overrideUSRs) = SymbolReferenceResolver.getReferenceUSRs(
+                    let (referencedUSRs, overrideUSRs) = UnnecessaryTestableSRResolver.getReferenceUSRs(
                         mainFile: unit.mainFile,
                         occurrencesByFile: occurrencesByFile
                     )

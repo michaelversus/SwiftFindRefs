@@ -10,6 +10,7 @@ final class MockFileSystem: FileSystemProvider {
     private let readFileResults: [String: String]
     private let readFileError: Error?
     private let writeFileError: Error?
+    let currentDirectoryPath: String
     var actions: [Action] = []
     var writtenFiles: [String: String] = [:]
 
@@ -29,7 +30,8 @@ final class MockFileSystem: FileSystemProvider {
         contentsOfDirectoryError: Error? = nil,
         readFileResults: [String: String] = [:],
         readFileError: Error? = nil,
-        writeFileError: Error? = nil
+        writeFileError: Error? = nil,
+        currentDirectoryPath: String = "/mock/current/directory"
     ) {
         self.fileExistsResults = fileExistsResults
         self.libraryDirectoryURL = libraryDirectoryURL
@@ -38,6 +40,7 @@ final class MockFileSystem: FileSystemProvider {
         self.readFileResults = readFileResults
         self.readFileError = readFileError
         self.writeFileError = writeFileError
+        self.currentDirectoryPath = currentDirectoryPath
     }
 
     func fileExists(atPath path: String) -> Bool {

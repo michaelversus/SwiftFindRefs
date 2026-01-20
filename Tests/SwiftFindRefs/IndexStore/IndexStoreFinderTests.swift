@@ -305,17 +305,20 @@ private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
     let symbol: MockSymbol
     let roles: SymbolRoles
     let locationLine: Int
+    let locationColumn: Int
     let symbolUSR: String
 
     init(
         symbol: MockSymbol,
         roles: SymbolRoles = [],
         locationLine: Int = 1,
+        locationColumn: Int = 1,
         symbolUSR: String = "mock.usr"
     ) {
         self.symbol = symbol
         self.roles = roles
         self.locationLine = locationLine
+        self.locationColumn = locationColumn
         self.symbolUSR = symbolUSR
     }
 

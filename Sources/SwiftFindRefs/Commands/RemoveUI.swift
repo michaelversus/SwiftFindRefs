@@ -30,26 +30,28 @@ extension SwiftFindRefs {
             let compositionRoot = RemoveCompositionRoot(
                 projectName: common.projectName,
                 derivedDataPath: common.derivedDataPath,
+                rootPath: common.rootPath,
                 excludeCompilationConditionals: excludeCompilationConditionals,
                 print: { print($0) },
                 vPrint: { if common.verbose { print($0) } },
                 fileSystem: fileSystem,
                 derivedDataLocator: derivedDataLocator,
-                removerFactory: { indexStorePath in
+                removerFactory: { indexStorePath, configuration in
                     UnnecessaryRemover(
                         indexStorePath: indexStorePath,
                         print: { print($0) },
                         storeFactory: { try IndexStore(path: indexStorePath) },
-                        analyzer: UnnecessaryTestableAnalyzer(
+                        analyzer: UnnecessaryImportsAnalyzer(
                             fileSystem: fileSystem,
                             extractor: ImportExtractor(
                                 fileSystem: fileSystem,
                                 excludeCompilationConditionals: excludeCompilationConditionals,
+                                ignoredModules: configuration.unusedImports.ignoredModules,
                                 prefix: .regularImport
                             ),
                             collector: IndexStoreCollector.self
                         ),
-                        rewriter: UnnecessaryTestableRewriter(fileSystem: fileSystem, print: { print($0) }),
+                        rewriter: UnnecessaryImportsRewriter(fileSystem: fileSystem, print: { print($0) }),
                         mode: .imports
                     )
                 }

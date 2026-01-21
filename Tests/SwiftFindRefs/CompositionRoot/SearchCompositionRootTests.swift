@@ -10,7 +10,7 @@ struct SearchCompositionRootTests {
     func test_run_printsFoundReferencesMessage() async throws {
         // Given
         let references = ["/mock/FileA.swift", "/mock/FileB.swift"]
-        let indexStoreFinder = StubIndexStoreFinder(references: references)
+        let indexStoreFinder = MockIndexStoreFinder(references: references)
         var standardMessages: [String] = []
 
         let sut = makeSearchSUT(
@@ -43,18 +43,5 @@ struct SearchCompositionRootTests {
             print: print,
             indexStoreFinder: indexStoreFinder
         )
-    }
-}
-
-// MARK: - StubIndexStoreFinder
-
-private struct StubIndexStoreFinder: IndexStoreFinding {
-    let references: [String]
-
-    func fileReferences(
-        of symbolName: String,
-        symbolType: String?
-    ) async throws -> [String] {
-        references
     }
 }

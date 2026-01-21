@@ -5,13 +5,13 @@ import Foundation
 struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
     private let fileSystem: any FileSystemProvider
     private let extractor: any ImportExtracting
-    private let collector: any IndexStoreCollecting.Type
+    private let collector: any IndexStoreCollecting
 
     /// Initializes an analyzer with the collaborators needed to walk imports and index store data.
     init(
         fileSystem: FileSystemProvider,
         extractor: ImportExtracting,
-        collector: any IndexStoreCollecting.Type
+        collector: any IndexStoreCollecting
     ) {
         self.fileSystem = fileSystem
         self.extractor = extractor
@@ -19,14 +19,10 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
     }
 
     /// Returns a mapping from file paths to the set of `@testable` imports that are not required by any referenced symbol.
-    ///
-    /// - Parameters:
-    ///   - store: The index store providing symbol information.
-    ///   - indexStorePath: The file-system path to the index store.
     /// - Returns: A dictionary keyed by source file path containing unnecessary `@testable` module names.
     /// - Throws: Propagates errors from the collector, extractor, or file system, and `RemoveError` when the index store lacks data for a declared testable module.
-    func analyze(store: some IndexStoreProviding, indexStorePath: String) async throws -> [String: Set<String>] {
-        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords(from: store, indexStorePath: indexStorePath)
+    func analyze() async throws -> [String: Set<String>] {
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
         let unitSnapshots = units.map { UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName) }
         let unitsByModule = Dictionary(grouping: unitSnapshots, by: \.moduleName)
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)

@@ -53,7 +53,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 recordName: MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .class))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .class, name: symbolName))
                 ])
             ]
         )
@@ -83,7 +83,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 recordName: MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: "DifferentSymbol", kind: .class))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .class, name: "DifferentSymbol"))
                 ])
             ]
         )
@@ -113,7 +113,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 recordName: MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .struct))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .struct, name: symbolName))
                 ])
             ]
         )
@@ -144,7 +144,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 recordName: MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .function))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .function, name: symbolName))
                 ])
             ]
         )
@@ -176,13 +176,13 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 "Record1": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .protocol))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .protocol, name: symbolName))
                 ]),
                 "Record2": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .protocol))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .protocol, name: symbolName))
                 ]),
                 "Record3": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .protocol))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .protocol, name: symbolName))
                 ])
             ]
         )
@@ -212,7 +212,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 "SystemRecord": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .class))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .class, name: symbolName))
                 ])
             ]
         )
@@ -274,7 +274,7 @@ struct IndexStoreFinderTests {
             ],
             recordReaders: [
                 recordName: MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(symbol: MockSymbol(name: symbolName, kind: .class))
+                    MockSymbolOccurrence(symbol: MockSymbol(kind: .class, name: symbolName))
                 ])
             ]
         )
@@ -291,95 +291,5 @@ struct IndexStoreFinderTests {
 
     private func makeSUT(indexStorePath: String = "/mock/path") -> IndexStoreFinder {
         IndexStoreFinder(indexStorePath: indexStorePath)
-    }
-}
-
-// MARK: - Test Doubles
-
-private struct MockSymbol: SymbolMatching, Sendable {
-    let name: String
-    let kind: SymbolKind
-}
-
-private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
-    let symbol: MockSymbol
-    let roles: SymbolRoles
-    let locationLine: Int
-    let locationColumn: Int
-    let symbolUSR: String
-
-    init(
-        symbol: MockSymbol,
-        roles: SymbolRoles = [],
-        locationLine: Int = 1,
-        locationColumn: Int = 1,
-        symbolUSR: String = "mock.usr"
-    ) {
-        self.symbol = symbol
-        self.roles = roles
-        self.locationLine = locationLine
-        self.locationColumn = locationColumn
-        self.symbolUSR = symbolUSR
-    }
-
-    var symbolMatching: SymbolMatching {
-        symbol
-    }
-
-    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void) {
-        _ = callback
-    }
-}
-
-private struct MockRecordReader: RecordReaderProviding, Sendable {
-    let occurrences: [MockSymbolOccurrence]
-    
-    func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void) {
-        occurrences.forEach { callback($0) }
-    }
-}
-
-private struct MockUnitDependency: UnitDependencyProviding, Sendable {
-    let kind: DependencyKind
-    let name: String
-    let filePath: String
-}
-
-private struct MockUnitReader: UnitReaderProviding, Sendable {
-    let isSystem: Bool
-    let dependencies: [MockUnitDependency]
-    let mainFile: String
-    let moduleName: String
-    let recordName: String?
-
-    init(
-        isSystem: Bool,
-        dependencies: [MockUnitDependency],
-        mainFile: String = "/mock/file.swift",
-        moduleName: String = "MockModule",
-        recordName: String? = "mock-record"
-    ) {
-        self.isSystem = isSystem
-        self.dependencies = dependencies
-        self.mainFile = mainFile
-        self.moduleName = moduleName
-        self.recordName = recordName
-    }
-
-    func forEachDependency(_ callback: (UnitDependencyProviding) -> Void) {
-        dependencies.forEach { callback($0) }
-    }
-}
-
-private struct MockIndexStore: IndexStoreProviding, Sendable {
-    let units: [MockUnitReader]
-    let recordReaders: [String: MockRecordReader]
-    
-    func forEachUnit(_ callback: (UnitReaderProviding) -> Void) {
-        units.forEach { callback($0) }
-    }
-    
-    func recordReader(for recordName: String) throws -> RecordReaderProviding? {
-        recordReaders[recordName]
     }
 }

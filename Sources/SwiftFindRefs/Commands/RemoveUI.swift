@@ -25,22 +25,25 @@ extension SwiftFindRefs {
 
         /// Builds the removal pipeline using the resolved IndexStore location and executes it.
         func run() async throws {
+            let vPrint = { if common.verbose { print($0) } }
             let fileSystem = FileSystem(fileManager: FileManager.default)
             let derivedDataLocator = DerivedDataLocator(fileSystem: fileSystem)
-            let compositionRoot = RemoveCompositionRoot(
+            let derivedDataPaths = try derivedDataLocator.locateDerivedData(
                 projectName: common.projectName,
-                derivedDataPath: common.derivedDataPath,
+                derivedDataPath: common.derivedDataPath
+            )
+            vPrint("DerivedData path: \(derivedDataPaths.derivedDataURL.path)")
+            vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
+            let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
+            let store = try IndexStore(path: indexStorePath)
+            let compositionRoot = RemoveCompositionRoot(
                 rootPath: common.rootPath,
-                excludeCompilationConditionals: excludeCompilationConditionals,
                 print: { print($0) },
                 vPrint: { if common.verbose { print($0) } },
                 fileSystem: fileSystem,
-                derivedDataLocator: derivedDataLocator,
-                removerFactory: { indexStorePath, configuration in
+                removerFactory: { configuration in
                     UnnecessaryRemover(
-                        indexStorePath: indexStorePath,
                         print: { print($0) },
-                        storeFactory: { try IndexStore(path: indexStorePath) },
                         analyzer: UnnecessaryImportsAnalyzer(
                             fileSystem: fileSystem,
                             extractor: ImportExtractor(
@@ -49,9 +52,16 @@ extension SwiftFindRefs {
                                 ignoredModules: configuration.unusedImports.ignoredModules,
                                 prefix: .regularImport
                             ),
-                            collector: IndexStoreCollector.self
+                            collector: IndexStoreCollector(
+                                store: store,
+                                indexStorePath: indexStorePath
+                            ),
+                            indexStoreImportExtractor: IndexStoreImportExtractor()
                         ),
-                        rewriter: UnnecessaryImportsRewriter(fileSystem: fileSystem, print: { print($0) }),
+                        rewriter: UnnecessaryImportsRewriter(
+                            fileSystem: fileSystem,
+                            print: { print($0) }
+                        ),
                         mode: .imports
                     )
                 }

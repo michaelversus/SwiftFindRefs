@@ -12,10 +12,11 @@ struct IndexStoreCollectorTests {
         // Given
         let store = MockIndexStore(units: [], recordReaders: [:])
         let indexStorePath = "/mock/index/store"
+        let collector = IndexStoreCollector(store: store, indexStorePath: indexStorePath)
 
         // When
         let error = #expect(throws: RemoveError.self) {
-            _ = try IndexStoreCollector.collectUnitsAndRecords(from: store, indexStorePath: indexStorePath)
+            _ = try collector.collectUnitsAndRecords()
         }
 
         // Then
@@ -39,10 +40,11 @@ struct IndexStoreCollectorTests {
             ]
         )
         let indexStorePath = "/mock"
+        let collector = IndexStoreCollector(store: store, indexStorePath: indexStorePath)
 
         // When
         let error = #expect(throws: RemoveError.self) {
-            _ = try IndexStoreCollector.collectUnitsAndRecords(from: store, indexStorePath: indexStorePath)
+            _ = try collector.collectUnitsAndRecords()
         }
 
         // Then
@@ -84,19 +86,16 @@ struct IndexStoreCollectorTests {
                 relatedSymbols: []
             )
         ]
-
         let store = MockIndexStore(
             units: [unit],
             recordReaders: [
                 "RecordA": MockRecordReader(occurrences: occurrences)
             ]
         )
+        let collector = IndexStoreCollector(store: store, indexStorePath: "/mock")
 
         // When
-        let (units, occurrencesByFile) = try IndexStoreCollector.collectUnitsAndRecords(
-            from: store,
-            indexStorePath: "/mock"
-        )
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
 
         // Then
         #expect(units.count == 1)
@@ -126,29 +125,24 @@ struct IndexStoreCollectorTests {
     func test_collectUnitsAndRecords_WhenDuplicateMainFile_keepsFirstRecordOccurrences() throws {
         // Given
         let mainFile = "/mock/duplicate.swift"
-
         let firstUnit = MockUnitReader(
             isSystem: false,
             mainFile: mainFile,
             moduleName: "App",
             recordName: "RecordFirst"
         )
-
         let secondUnit = MockUnitReader(
             isSystem: false,
             mainFile: mainFile,
             moduleName: "App",
             recordName: "RecordSecond"
         )
-
         let firstOccurrences = [
             MockSymbolOccurrence(symbolName: "First", symbolKind: .class, locationLine: 1, locationColumn: 1, symbolUSR: "usr:first")
         ]
-
         let secondOccurrences = [
             MockSymbolOccurrence(symbolName: "Second", symbolKind: .class, locationLine: 2, locationColumn: 1, symbolUSR: "usr:second")
         ]
-
         let store = MockIndexStore(
             units: [firstUnit, secondUnit],
             recordReaders: [
@@ -156,9 +150,10 @@ struct IndexStoreCollectorTests {
                 "RecordSecond": MockRecordReader(occurrences: secondOccurrences)
             ]
         )
+        let collector = IndexStoreCollector(store: store, indexStorePath: "/mock")
 
         // When
-        let (units, occurrencesByFile) = try IndexStoreCollector.collectUnitsAndRecords(from: store, indexStorePath: "/mock")
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
 
         // Then
         #expect(units.count == 2)
@@ -178,15 +173,15 @@ struct IndexStoreCollectorTests {
             moduleName: "App",
             recordName: "Record"
         )
-
         let store = MockIndexStore(
             units: [unit],
             recordReaders: [:],
             recordReaderError: TestError.sample
         )
+        let collector = IndexStoreCollector(store: store, indexStorePath: "/mock")
 
         // When
-        let (units, occurrencesByFile) = try IndexStoreCollector.collectUnitsAndRecords(from: store, indexStorePath: "/mock")
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
 
         // Then
         #expect(units.count == 1)
@@ -202,137 +197,19 @@ struct IndexStoreCollectorTests {
             moduleName: "App",
             recordName: nil
         )
-
         let store = MockIndexStore(
             units: [unit],
             recordReaders: [
                 "Record": MockRecordReader(occurrences: [MockSymbolOccurrence(symbolName: "ShouldNotBeUsed")])
             ]
         )
+        let collector = IndexStoreCollector(store: store, indexStorePath: "/mock")
 
         // When
-        let (units, occurrencesByFile) = try IndexStoreCollector.collectUnitsAndRecords(from: store, indexStorePath: "/mock")
+        let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
 
         // Then
         #expect(units.count == 1)
         #expect(occurrencesByFile.isEmpty)
-    }
-}
-
-// MARK: - Test Doubles
-
-private enum TestError: Error, Equatable {
-    case sample
-}
-
-private struct MockSymbol: SymbolMatching, Sendable {
-    let kind: SymbolKind
-    let name: String
-    let usr: String
-
-    init(
-        kind: SymbolKind,
-        name: String,
-        usr: String
-    ) {
-        self.kind = kind
-        self.name = name
-        self.usr = usr
-    }
-}
-
-private struct MockRelatedSymbol: RelatedSymbolProviding, Sendable {
-    let kind: SymbolKind
-}
-
-private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
-    let symbol: MockSymbol
-    let roles: SymbolRoles
-    let locationLine: Int
-    let locationColumn: Int
-    let symbolUSR: String
-    let relatedSymbols: [(MockRelatedSymbol, SymbolRoles)]
-
-    init(
-        symbolName: String,
-        symbolKind: SymbolKind = .class,
-        roles: SymbolRoles = [],
-        locationLine: Int = 1,
-        locationColumn: Int = 1,
-        symbolUSR: String = "mock.usr",
-        relatedSymbols: [(MockRelatedSymbol, SymbolRoles)] = []
-    ) {
-        symbol = MockSymbol(kind: symbolKind, name: symbolName, usr: symbolUSR)
-        self.roles = roles
-        self.locationLine = locationLine
-        self.locationColumn = locationColumn
-        self.symbolUSR = symbolUSR
-        self.relatedSymbols = relatedSymbols
-    }
-
-    var symbolMatching: SymbolMatching {
-        symbol
-    }
-
-    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void) {
-        relatedSymbols.forEach { callback($0.0, $0.1) }
-    }
-}
-
-private struct MockRecordReader: RecordReaderProviding, Sendable {
-    let occurrences: [MockSymbolOccurrence]
-
-    func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void) {
-        occurrences.forEach { callback($0) }
-    }
-}
-
-private struct MockUnitReader: UnitReaderProviding, Sendable {
-    let isSystem: Bool
-    let mainFile: String
-    let moduleName: String
-    let recordName: String?
-
-    init(
-        isSystem: Bool,
-        mainFile: String,
-        moduleName: String,
-        recordName: String?
-    ) {
-        self.isSystem = isSystem
-        self.mainFile = mainFile
-        self.moduleName = moduleName
-        self.recordName = recordName
-    }
-
-    func forEachDependency(_ callback: (UnitDependencyProviding) -> Void) {
-        _ = callback
-    }
-}
-
-private struct MockIndexStore: IndexStoreProviding, Sendable {
-    let units: [MockUnitReader]
-    let recordReaders: [String: MockRecordReader]
-    let recordReaderError: Error?
-
-    init(
-        units: [MockUnitReader],
-        recordReaders: [String: MockRecordReader],
-        recordReaderError: Error? = nil
-    ) {
-        self.units = units
-        self.recordReaders = recordReaders
-        self.recordReaderError = recordReaderError
-    }
-
-    func forEachUnit(_ callback: (UnitReaderProviding) -> Void) {
-        units.forEach { callback($0) }
-    }
-
-    func recordReader(for recordName: String) throws -> RecordReaderProviding? {
-        if let recordReaderError {
-            throw recordReaderError
-        }
-        return recordReaders[recordName]
     }
 }

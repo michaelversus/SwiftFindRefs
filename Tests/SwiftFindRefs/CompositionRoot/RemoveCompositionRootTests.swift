@@ -4,30 +4,26 @@ import Testing
 
 @Suite("RemoveCompositionRoot Tests")
 struct RemoveCompositionRootTests {
-    @Test("test run with invalid derived data path throws invalid path error")
-    func test_run_WithInvalidDerivedDataPath_throwsInvalidPathError() async {
+    @Test("test run with missing configuration file throws configuration error")
+    func test_run_WithMissingConfiguration_throwsConfigurationError() async {
         // Given
-        let invalidPath = "/invalid/DerivedData"
-        let fileSystem = MockFileSystem(fileExistsResults: [invalidPath: false])
+        let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
         let sut = makeRemoveSUT(
-            projectName: "Project",
-            derivedDataPath: invalidPath,
-            excludeCompilationConditionals: false,
             fileSystem: fileSystem,
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // When
-        let error = await #expect(throws: DerivedDataLocatorError.self) {
+        let error = await #expect(throws: ConfigurationLoaderError.self) {
             try await sut.run()
         }
 
         // Then
-        guard case .invalidPath(let path) = error else {
-            Issue.record("Expected .invalidPath but received \(error)")
+        guard case .configurationFileNotFound(let path) = error else {
+            Issue.record("Expected .configurationFileNotFound but received \(error)")
             return
         }
-        #expect(path == invalidPath)
+        #expect(path == "/mock/current/directory/.swift-find-refs.json")
     }
 
     @Test("test run prints updated files count when nothing updated")
@@ -48,12 +44,9 @@ struct RemoveCompositionRootTests {
         )
         var printMessages: [String] = []
         let sut = makeRemoveSUT(
-            projectName: "Project",
-            derivedDataPath: derivedDataPath,
-            excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // When
@@ -82,17 +75,12 @@ struct RemoveCompositionRootTests {
         var printMessages: [String] = []
         var vPrintMessages: [String] = []
         let updatedFiles = ["/mock/FileA.swift", "/mock/FileB.swift"]
-        var receivedIndexStorePath: String?
         let sut = makeRemoveSUT(
-            projectName: "Project",
-            derivedDataPath: derivedDataPath,
-            excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
             vPrint: { vPrintMessages.append($0) },
-            removerFactory: { path, _ in
-                receivedIndexStorePath = path
-                return MockRemover(result: updatedFiles)
+            removerFactory: { _ in
+                MockRemover(result: updatedFiles)
             }
         )
 
@@ -100,7 +88,6 @@ struct RemoveCompositionRootTests {
         try await sut.run()
 
         // Then
-        #expect(receivedIndexStorePath == "/mock/DerivedData")
         #expect(printMessages.contains("✅ Updated 2 files"))
         #expect(vPrintMessages.contains("Updated files:"))
         #expect(vPrintMessages.contains("/mock/FileA.swift"))
@@ -112,15 +99,11 @@ struct RemoveCompositionRootTests {
         // Given
         let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
         let sut = RemoveCompositionRoot(
-            projectName: nil,
-            derivedDataPath: nil,
             rootPath: "/my/project/",
-            excludeCompilationConditionals: false,
             print: { _ in },
             vPrint: { _ in },
             fileSystem: fileSystem,
-            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // Then
@@ -132,15 +115,11 @@ struct RemoveCompositionRootTests {
         // Given
         let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
         let sut = RemoveCompositionRoot(
-            projectName: nil,
-            derivedDataPath: nil,
             rootPath: "/my/project",
-            excludeCompilationConditionals: false,
             print: { _ in },
             vPrint: { _ in },
             fileSystem: fileSystem,
-            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // Then
@@ -152,15 +131,11 @@ struct RemoveCompositionRootTests {
         // Given
         let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory/")
         let sut = RemoveCompositionRoot(
-            projectName: nil,
-            derivedDataPath: nil,
             rootPath: nil,
-            excludeCompilationConditionals: false,
             print: { _ in },
             vPrint: { _ in },
             fileSystem: fileSystem,
-            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // Then
@@ -172,15 +147,11 @@ struct RemoveCompositionRootTests {
         // Given
         let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
         let sut = RemoveCompositionRoot(
-            projectName: nil,
-            derivedDataPath: nil,
             rootPath: nil,
-            excludeCompilationConditionals: false,
             print: { _ in },
             vPrint: { _ in },
             fileSystem: fileSystem,
-            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
-            removerFactory: { _, _ in MockRemover(result: []) }
+            removerFactory: { _ in MockRemover(result: []) }
         )
 
         // Then
@@ -188,32 +159,17 @@ struct RemoveCompositionRootTests {
     }
 
     private func makeRemoveSUT(
-        projectName: String?,
-        derivedDataPath: String?,
-        excludeCompilationConditionals: Bool,
         fileSystem: MockFileSystem,
         print: @escaping (String) -> Void = { _ in },
         vPrint: @escaping (String) -> Void = { _ in },
-        removerFactory: @escaping (String, Configuration) -> UnnecessaryRemoving
+        removerFactory: @escaping (Configuration) -> UnnecessaryRemoving
     ) -> RemoveCompositionRoot {
         RemoveCompositionRoot(
-            projectName: projectName,
-            derivedDataPath: derivedDataPath,
             rootPath: nil,
-            excludeCompilationConditionals: excludeCompilationConditionals,
             print: print,
             vPrint: vPrint,
             fileSystem: fileSystem,
-            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
             removerFactory: removerFactory
         )
-    }
-}
-
-private struct MockRemover: UnnecessaryRemoving {
-    let result: [String]
-
-    func run() async throws -> [String] {
-        result
     }
 }

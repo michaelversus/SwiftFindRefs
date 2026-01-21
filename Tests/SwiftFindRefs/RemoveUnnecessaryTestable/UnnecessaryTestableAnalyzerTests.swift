@@ -14,41 +14,45 @@ struct UnnecessaryTestableAnalyzerTests {
             appFile: "@testable import ModuleA\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let store = MockIndexStore(
-            units: [
-                MockUnitReader(mainFile: appFile, moduleName: "App", recordName: "app-record"),
-                MockUnitReader(mainFile: moduleFile, moduleName: "ModuleA", recordName: "module-record")
-            ],
-            recordReaders: [
-                "app-record": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.reference],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ]),
-                "module-record": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.definition],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ])
-            ]
-        )
-        let extractor = MockTestableImportExtractor(resultsByFile: [
+        let extractor = MockImportExtractor(resultsByFile: [
             appFile: ["ModuleA"]
         ])
+        let collector = MockIndexStoreCollector(
+            result: .success(
+                (
+                    [
+                        MockUnitReader(
+                            isSystem: false,
+                            dependencies: [],
+                            mainFile: appFile,
+                            moduleName: "AppTests",
+                            recordName: "AppTests",
+                        )
+                    ],
+                    [
+                        appFile: [
+                            OccurrenceSnapshot(
+                                symbolKind: .class,
+                                roles: .reference,
+                                locationLine: 10,
+                                locationColumn: 5,
+                                symbolUSR: "c:10ModuleA3FooC",
+                                symbolName: "Foo",
+                                relatedSymbols: []
+                            )
+                        ]
+                    ]
+                )
+            )
+        )
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: IndexStoreCollector.self
+            collector: collector
         )
 
         // When
-        let result = try await sut.analyze(store: store, indexStorePath: "/index")
+        let result = try await sut.analyze()
 
         // Then
         #expect(result == [appFile: ["ModuleA"]])
@@ -63,41 +67,18 @@ struct UnnecessaryTestableAnalyzerTests {
             appFile: "@testable import ModuleA\n",
             moduleFile: "class Foo {}\n"
         ])
-        let store = MockIndexStore(
-            units: [
-                MockUnitReader(mainFile: appFile, moduleName: "App", recordName: "app-record"),
-                MockUnitReader(mainFile: moduleFile, moduleName: "ModuleA", recordName: "module-record")
-            ],
-            recordReaders: [
-                "app-record": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.reference],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ]),
-                "module-record": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.definition],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ])
-            ]
-        )
-        let extractor = MockTestableImportExtractor(resultsByFile: [
+        let extractor = MockImportExtractor(resultsByFile: [
             appFile: ["ModuleA"]
         ])
+        let collector = MockIndexStoreCollector()
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: IndexStoreCollector.self
+            collector: collector
         )
 
         // When
-        let result = try await sut.analyze(store: store, indexStorePath: "/index")
+        let result = try await sut.analyze()
 
         // Then
         #expect(result.isEmpty)
@@ -110,26 +91,19 @@ struct UnnecessaryTestableAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "@testable import ModuleA\n"
         ])
-        let store = MockIndexStore(
-            units: [
-                MockUnitReader(mainFile: appFile, moduleName: "App", recordName: "app-record")
-            ],
-            recordReaders: [
-                "app-record": MockRecordReader(occurrences: [])
-            ]
-        )
-        let extractor = MockTestableImportExtractor(resultsByFile: [
+        let extractor = MockImportExtractor(resultsByFile: [
             appFile: ["ModuleA"]
         ])
+        let collector = MockIndexStoreCollector()
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: IndexStoreCollector.self
+            collector: collector
         )
 
         // When
         let error = await #expect(throws: RemoveError.self) {
-            _ = try await sut.analyze(store: store, indexStorePath: "/index")
+            _ = try await sut.analyze()
         }
 
         // Then
@@ -150,43 +124,18 @@ struct UnnecessaryTestableAnalyzerTests {
             appFile: "@testable import ModuleA\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let store = MockIndexStore(
-            units: [
-                MockUnitReader(mainFile: appFile, moduleName: "App", recordName: "record-1"),
-                MockUnitReader(mainFile: appFile, moduleName: "App", recordName: "record-2"),
-                MockUnitReader(mainFile: moduleFile, moduleName: "ModuleA", recordName: "module-record")
-            ],
-            recordReaders: [
-                "record-1": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.reference],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ]),
-                "record-2": MockRecordReader(occurrences: []),
-                "module-record": MockRecordReader(occurrences: [
-                    MockSymbolOccurrence(
-                        symbol: MockSymbol(name: "Foo", kind: .class),
-                        roles: [.definition],
-                        locationLine: 1,
-                        symbolUSR: "usr.foo"
-                    )
-                ])
-            ]
-        )
-        let extractor = MockTestableImportExtractor(resultsByFile: [
+        let extractor = MockImportExtractor(resultsByFile: [
             appFile: ["ModuleA"]
         ])
+        let collector = MockIndexStoreCollector()
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: IndexStoreCollector.self
+            collector: collector
         )
 
         // When
-        let result = try await sut.analyze(store: store, indexStorePath: "/index")
+        let result = try await sut.analyze()
 
         // Then
         #expect(result == [appFile: ["ModuleA"]])
@@ -196,17 +145,17 @@ struct UnnecessaryTestableAnalyzerTests {
     func test_analyze_ThrowsFailedToLoadUnitsWhenNoUnits() async {
         // Given
         let fileSystem = MockFileSystem()
-        let store = MockIndexStore(units: [], recordReaders: [:])
-        let extractor = MockTestableImportExtractor(resultsByFile: [:])
+        let extractor = MockImportExtractor(resultsByFile: [:])
+        let collector = MockIndexStoreCollector()
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: IndexStoreCollector.self
+            collector: collector
         )
 
         // When
         let error = await #expect(throws: RemoveError.self) {
-            _ = try await sut.analyze(store: store, indexStorePath: "/index")
+            _ = try await sut.analyze()
         }
 
         // Then
@@ -215,101 +164,5 @@ struct UnnecessaryTestableAnalyzerTests {
             return
         }
         #expect(path == "/index")
-    }
-}
-
-// MARK: - Test Doubles
-
-private struct MockSymbol: SymbolMatching, Sendable {
-    let name: String
-    let kind: SymbolKind
-}
-
-private struct MockRelatedSymbol: RelatedSymbolProviding, Sendable {
-    let kind: SymbolKind
-}
-
-private struct MockSymbolOccurrence: SymbolOccurrenceProviding, Sendable {
-    let symbol: MockSymbol
-    let roles: SymbolRoles
-    let locationLine: Int
-    let locationColumn: Int
-    let symbolUSR: String
-    let relatedSymbols: [(MockRelatedSymbol, SymbolRoles)]
-
-    init(
-        symbol: MockSymbol,
-        roles: SymbolRoles = [],
-        locationLine: Int = 1,
-        locationColumn: Int = 1,
-        symbolUSR: String = "mock.usr",
-        relatedSymbols: [(MockRelatedSymbol, SymbolRoles)] = []
-    ) {
-        self.symbol = symbol
-        self.roles = roles
-        self.locationLine = locationLine
-        self.locationColumn = locationColumn
-        self.symbolUSR = symbolUSR
-        self.relatedSymbols = relatedSymbols
-    }
-
-    var symbolMatching: SymbolMatching {
-        symbol
-    }
-
-    func forEachRelatedSymbol(_ callback: (RelatedSymbolProviding, SymbolRoles) -> Void) {
-        relatedSymbols.forEach { callback($0.0, $0.1) }
-    }
-}
-
-private struct MockRecordReader: RecordReaderProviding, Sendable {
-    let occurrences: [MockSymbolOccurrence]
-
-    func forEachOccurrence(_ callback: (SymbolOccurrenceProviding) -> Void) {
-        occurrences.forEach { callback($0) }
-    }
-}
-
-private struct MockUnitReader: UnitReaderProviding, Sendable {
-    let isSystem: Bool
-    let mainFile: String
-    let moduleName: String
-    let recordName: String?
-
-    init(
-        isSystem: Bool = false,
-        mainFile: String,
-        moduleName: String,
-        recordName: String?
-    ) {
-        self.isSystem = isSystem
-        self.mainFile = mainFile
-        self.moduleName = moduleName
-        self.recordName = recordName
-    }
-
-    func forEachDependency(_ callback: (UnitDependencyProviding) -> Void) {
-        _ = callback
-    }
-}
-
-private struct MockIndexStore: IndexStoreProviding, Sendable {
-    let units: [MockUnitReader]
-    let recordReaders: [String: MockRecordReader]
-
-    func forEachUnit(_ callback: (UnitReaderProviding) -> Void) {
-        units.forEach { callback($0) }
-    }
-
-    func recordReader(for recordName: String) throws -> RecordReaderProviding? {
-        recordReaders[recordName]
-    }
-}
-
-private struct MockTestableImportExtractor: ImportExtracting, Sendable {
-    let resultsByFile: [String: Set<String>]
-
-    func imports(inFile path: String) async throws -> Set<String> {
-        resultsByFile[path] ?? []
     }
 }

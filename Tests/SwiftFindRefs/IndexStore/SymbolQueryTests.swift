@@ -95,7 +95,7 @@ struct SymbolQueryTests {
     func test_matches_WithMatchingNameAndNilKind_returnsTrue() {
         // Given
         let sut = makeSUT(name: "Selection", kindString: nil)
-        let symbol = MockSymbol(name: "Selection", kind: .class)
+        let symbol = MockSymbol(kind: .class, name: "Selection")
         
         // When
         let result = sut.matches(symbol)
@@ -108,7 +108,7 @@ struct SymbolQueryTests {
     func test_matches_WithDifferentName_returnsFalse() {
         // Given
         let sut = makeSUT(name: "Selection", kindString: nil)
-        let symbol = MockSymbol(name: "OtherClass", kind: .class)
+        let symbol = MockSymbol(kind: .class, name: "OtherClass")
         
         // When
         let result = sut.matches(symbol)
@@ -121,7 +121,7 @@ struct SymbolQueryTests {
     func test_matches_WithMatchingNameAndKind_returnsTrue() {
         // Given
         let sut = makeSUT(name: "Selection", kindString: "class")
-        let symbol = MockSymbol(name: "Selection", kind: .class)
+        let symbol = MockSymbol(kind: .class, name: "Selection")
         
         // When
         let result = sut.matches(symbol)
@@ -134,7 +134,7 @@ struct SymbolQueryTests {
     func test_matches_WithMatchingNameButDifferentKind_returnsFalse() {
         // Given
         let sut = makeSUT(name: "Selection", kindString: "class")
-        let symbol = MockSymbol(name: "Selection", kind: .struct)
+        let symbol = MockSymbol(kind: .struct, name: "Selection")
         
         // When
         let result = sut.matches(symbol)
@@ -173,11 +173,4 @@ struct SymbolQueryTests {
             ("extension", .extension),
         ]
     }
-}
-
-// MARK: - Test Doubles
-
-private struct MockSymbol: SymbolMatching {
-    let name: String
-    let kind: SymbolKind
 }

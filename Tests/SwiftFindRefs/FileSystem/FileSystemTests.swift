@@ -197,10 +197,6 @@ struct FileSystemTests {
 
 // MARK: - Test Doubles
 
-private enum TestError: Error, Equatable {
-    case sample
-}
-
 private final class TestFileManager: FileManager {
     var fileExistsResults: [String: Bool]
     var libraryDirectoryURLs: [URL]?

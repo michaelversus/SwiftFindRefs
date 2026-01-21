@@ -1,17 +1,23 @@
 import IndexStore
 
 /// Concrete collector that walks an IndexStore and extracts unit readers and occurrence snapshots.
-enum IndexStoreCollector: IndexStoreCollecting {
-    /// Scans the provided store, gathering unit readers and their occurrences grouped by main file.
+struct IndexStoreCollector: IndexStoreCollecting {
+    private let store: any IndexStoreProviding
+    private let indexStorePath: String
+
+    /// Initializes the collector with the specified index store and its file system path.
     /// - Parameters:
-    ///   - store: The index store abstraction to inspect.
-    ///   - indexStorePath: Path to the IndexStore, used for error reporting when units cannot be loaded.
+    ///  - store: The index store abstraction to inspect.
+    ///  - indexStorePath: Path to the IndexStore, used for error reporting when units cannot be loaded.
+    init(store: some IndexStoreProviding, indexStorePath: String) {
+        self.store = store
+        self.indexStorePath = indexStorePath
+    }
+
+    /// Scans the provided store, gathering unit readers and their occurrences grouped by main file.
     /// - Returns: A tuple containing collected unit readers and a dictionary of occurrence snapshots keyed by file path.
     /// - Throws: `UnnecessaryTestableError.failedToLoadUnits` when the store yields no units.
-    static func collectUnitsAndRecords(
-        from store: some IndexStoreProviding,
-        indexStorePath: String
-    ) throws -> ([UnitReaderProviding], [String: [OccurrenceSnapshot]]) {
+    func collectUnitsAndRecords() throws -> ([UnitReaderProviding], [String: [OccurrenceSnapshot]]) {
         var units: [UnitReaderProviding] = []
         var occurrencesByFile: [String: [OccurrenceSnapshot]] = [:]
         store.forEachUnit { unitReader in

@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import IndexStore
 
 /// Utility that queries an IndexStore database to locate the files referencing a target symbol.
-struct IndexStoreFinder {
+struct IndexStoreFinder: IndexStoreFinding {
     /// Absolute path to the IndexStore directory used when instantiating the store on demand.
     let indexStorePath: String
 

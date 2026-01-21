@@ -1,4 +1,3 @@
-
 struct Configuration: Decodable, Equatable {
     let unusedImports: UnusedImportsConfiguration
 }

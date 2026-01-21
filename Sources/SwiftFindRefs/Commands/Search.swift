@@ -24,15 +24,19 @@ extension SwiftFindRefs {
         func run() async throws {
             let fileSystem = FileSystem(fileManager: FileManager.default)
             let derivedDataLocator = DerivedDataLocator(fileSystem: fileSystem)
-            let compositionRoot = SearchCompositionRoot(
+            let derivedDataPaths = try derivedDataLocator.locateDerivedData(
                 projectName: common.projectName,
-                derivedDataPath: common.derivedDataPath,
+                derivedDataPath: common.derivedDataPath
+            )
+            let vPrint = { if common.verbose { print($0) } }
+            vPrint("DerivedData path: \(derivedDataPaths.derivedDataURL.path)")
+            vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
+            let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
+            let compositionRoot = SearchCompositionRoot(
                 symbolName: name,
                 symbolType: type,
                 print: { print($0) },
-                vPrint: { if common.verbose { print($0) } },
-                fileSystem: fileSystem,
-                derivedDataLocator: derivedDataLocator
+                indexStoreFinder: IndexStoreFinder(indexStorePath: indexStorePath)
             )
             try await compositionRoot.run()
         }

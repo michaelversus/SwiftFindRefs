@@ -6,6 +6,20 @@ import Testing
 struct FileSystemTests {
     // MARK: - Tests
 
+    @Test("test currentDirectoryPath returns file manager currentDirectoryPath")
+    func test_currentDirectoryPath_ReturnsFileManagerCurrentDirectoryPath() {
+        // Given
+        let expectedPath = "/tmp/CurrentDirectory-\(UUID().uuidString)"
+        let fileManager = TestFileManager(currentDirectoryPath: expectedPath)
+        let sut = makeSUT(fileManager: fileManager)
+
+        // When
+        let result = sut.currentDirectoryPath
+
+        // Then
+        #expect(result == expectedPath)
+    }
+
     @Test("test fileExists with existing path returns true")
     func test_fileExists_WithExistingPath_returnsTrue() {
         // Given
@@ -193,18 +207,25 @@ private final class TestFileManager: FileManager {
     var homeDirectoryURL: URL
     var contentsResults: [URL: Result<[URL], Error>]
     var contentsCallArguments: (url: URL, keys: [URLResourceKey]?, options: FileManager.DirectoryEnumerationOptions)?
+    private let stubbedCurrentDirectoryPath: String?
 
     init(
         fileExistsResults: [String: Bool] = [:],
         libraryDirectoryURLs: [URL]? = nil,
         homeDirectoryURL: URL = FileManager.default.homeDirectoryForCurrentUser,
-        contentsResults: [URL: Result<[URL], Error>] = [:]
+        contentsResults: [URL: Result<[URL], Error>] = [:],
+        currentDirectoryPath: String? = nil
     ) {
         self.fileExistsResults = fileExistsResults
         self.libraryDirectoryURLs = libraryDirectoryURLs
         self.homeDirectoryURL = homeDirectoryURL
         self.contentsResults = contentsResults
+        self.stubbedCurrentDirectoryPath = currentDirectoryPath
         super.init()
+    }
+
+    override var currentDirectoryPath: String {
+        stubbedCurrentDirectoryPath ?? super.currentDirectoryPath
     }
 
     override func fileExists(atPath path: String) -> Bool {

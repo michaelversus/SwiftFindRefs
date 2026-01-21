@@ -84,4 +84,96 @@ struct ImportExtractorTests {
         // Then
         #expect(imports == ["Stoiximan", "Betano", "BetanoCasinoBE"])
     }
+
+    @Test("skips regular imports that have no module name")
+    func test_skipsRegularImportsWithoutModuleName() async throws {
+        // Given
+        let filePath = "/mock/emptyImport.swift"
+        let contents = """
+        import    
+        import ModuleA
+        """
+        let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
+        let sut = ImportExtractor(
+            fileSystem: fileSystem,
+            excludeCompilationConditionals: false,
+            ignoredModules: [],
+            prefix: .regularImport
+        )
+
+        // When
+        let imports = try await sut.imports(inFile: filePath)
+
+        // Then
+        #expect(imports == ["ModuleA"])
+    }
+
+    @Test("skips @testable imports that have no module name")
+    func test_skipsTestableImportsWithoutModuleName() async throws {
+        // Given
+        let filePath = "/mock/emptyTestableImport.swift"
+        let contents = """
+        @testable import    
+        @testable import ModuleA
+        """
+        let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
+        let sut = ImportExtractor(
+            fileSystem: fileSystem,
+            excludeCompilationConditionals: false,
+            ignoredModules: [],
+            prefix: .testableImport
+        )
+
+        // When
+        let imports = try await sut.imports(inFile: filePath)
+
+        // Then
+        #expect(imports == ["ModuleA"])
+    }
+
+    @Test("skips regular imports whose module is in ignoredModules")
+    func test_skipsIgnoredRegularImports() async throws {
+        // Given
+        let filePath = "/mock/ignoredRegularImport.swift"
+        let contents = """
+        import ModuleA
+        import ModuleB
+        """
+        let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
+        let sut = ImportExtractor(
+            fileSystem: fileSystem,
+            excludeCompilationConditionals: false,
+            ignoredModules: ["ModuleA"],
+            prefix: .regularImport
+        )
+
+        // When
+        let imports = try await sut.imports(inFile: filePath)
+
+        // Then
+        #expect(imports == ["ModuleB"])
+    }
+
+    @Test("skips @testable imports whose module is in ignoredModules")
+    func test_skipsIgnoredTestableImports() async throws {
+        // Given
+        let filePath = "/mock/ignoredTestableImport.swift"
+        let contents = """
+        @testable import ModuleA
+        @testable import ModuleB
+        """
+        let fileSystem = MockFileSystem(readFileResults: [filePath: contents])
+        let sut = ImportExtractor(
+            fileSystem: fileSystem,
+            excludeCompilationConditionals: false,
+            ignoredModules: ["ModuleA"],
+            prefix: .testableImport
+        )
+
+        // When
+        let imports = try await sut.imports(inFile: filePath)
+
+        // Then
+        #expect(imports == ["ModuleB"])
+    }
 }

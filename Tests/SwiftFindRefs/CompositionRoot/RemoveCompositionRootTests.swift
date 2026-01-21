@@ -36,10 +36,10 @@ struct RemoveCompositionRootTests {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
-        
+
         let configPath = tempDir.appendingPathComponent(".swift-find-refs.json")
         try "{\"unusedImports\":{\"ignoredModules\":[]}}".write(to: configPath, atomically: true, encoding: .utf8)
-        
+
         let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
         let currentDirPath = tempDir.path.hasSuffix("/") ? tempDir.path : tempDir.path + "/"
         let fileSystem = MockFileSystem(
@@ -69,10 +69,10 @@ struct RemoveCompositionRootTests {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
-        
+
         let configPath = tempDir.appendingPathComponent(".swift-find-refs.json")
         try "{\"unusedImports\":{\"ignoredModules\":[]}}".write(to: configPath, atomically: true, encoding: .utf8)
-        
+
         let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
         let currentDirPath = tempDir.path.hasSuffix("/") ? tempDir.path : tempDir.path + "/"
         let fileSystem = MockFileSystem(
@@ -105,6 +105,86 @@ struct RemoveCompositionRootTests {
         #expect(vPrintMessages.contains("Updated files:"))
         #expect(vPrintMessages.contains("/mock/FileA.swift"))
         #expect(vPrintMessages.contains("/mock/FileB.swift"))
+    }
+
+    @Test("test root uses provided root path when root path has trailing slash")
+    func test_root_WithProvidedRootPathEndingWithSlash_usesRootPathAsIs() {
+        // Given
+        let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
+        let sut = RemoveCompositionRoot(
+            projectName: nil,
+            derivedDataPath: nil,
+            rootPath: "/my/project/",
+            excludeCompilationConditionals: false,
+            print: { _ in },
+            vPrint: { _ in },
+            fileSystem: fileSystem,
+            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
+            removerFactory: { _, _ in MockRemover(result: []) }
+        )
+
+        // Then
+        #expect(sut.root == "/my/project/")
+    }
+
+    @Test("test root appends slash when provided root path has no trailing slash")
+    func test_root_WithProvidedRootPathMissingTrailingSlash_appendsSlash() {
+        // Given
+        let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
+        let sut = RemoveCompositionRoot(
+            projectName: nil,
+            derivedDataPath: nil,
+            rootPath: "/my/project",
+            excludeCompilationConditionals: false,
+            print: { _ in },
+            vPrint: { _ in },
+            fileSystem: fileSystem,
+            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
+            removerFactory: { _, _ in MockRemover(result: []) }
+        )
+
+        // Then
+        #expect(sut.root == "/my/project/")
+    }
+
+    @Test("test root uses current directory path when root path is nil and current directory has trailing slash")
+    func test_root_WithNilRootPathAndCurrentDirectoryEndingWithSlash_usesCurrentDirectoryAsIs() {
+        // Given
+        let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory/")
+        let sut = RemoveCompositionRoot(
+            projectName: nil,
+            derivedDataPath: nil,
+            rootPath: nil,
+            excludeCompilationConditionals: false,
+            print: { _ in },
+            vPrint: { _ in },
+            fileSystem: fileSystem,
+            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
+            removerFactory: { _, _ in MockRemover(result: []) }
+        )
+
+        // Then
+        #expect(sut.root == "/mock/current/directory/")
+    }
+
+    @Test("test root appends slash when root path is nil and current directory has no trailing slash")
+    func test_root_WithNilRootPathAndCurrentDirectoryMissingTrailingSlash_appendsSlash() {
+        // Given
+        let fileSystem = MockFileSystem(currentDirectoryPath: "/mock/current/directory")
+        let sut = RemoveCompositionRoot(
+            projectName: nil,
+            derivedDataPath: nil,
+            rootPath: nil,
+            excludeCompilationConditionals: false,
+            print: { _ in },
+            vPrint: { _ in },
+            fileSystem: fileSystem,
+            derivedDataLocator: DerivedDataLocator(fileSystem: fileSystem),
+            removerFactory: { _, _ in MockRemover(result: []) }
+        )
+
+        // Then
+        #expect(sut.root == "/mock/current/directory/")
     }
 
     private func makeRemoveSUT(

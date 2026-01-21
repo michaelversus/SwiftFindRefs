@@ -9,8 +9,8 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
 
     /// Initializes an analyzer with the collaborators needed to walk imports and index store data.
     init(
-        fileSystem: FileSystemProvider,
-        extractor: ImportExtracting,
+        fileSystem: any FileSystemProvider,
+        extractor: any ImportExtracting,
         collector: any IndexStoreCollecting
     ) {
         self.fileSystem = fileSystem

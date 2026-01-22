@@ -34,12 +34,15 @@ extension SwiftFindRefs {
             vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
             let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
             let store = try IndexStore(path: indexStorePath)
+            // Compute root path before creating compositionRoot
+            let resolvedRootPath = common.rootPath ?? fileSystem.currentDirectoryPath
+            let rootPath = resolvedRootPath.hasSuffix("/") ? resolvedRootPath : resolvedRootPath + "/"
             let compositionRoot = RemoveCompositionRoot(
                 rootPath: common.rootPath,
                 print: { print($0) },
                 vPrint: vPrint,
                 fileSystem: fileSystem,
-                removerFactory: { _ in
+                removerFactory: { configuration in
                     UnnecessaryRemover(
                         print: { print($0) },
                         analyzer: UnnecessaryTestableAnalyzer(
@@ -53,7 +56,9 @@ extension SwiftFindRefs {
                             collector: IndexStoreCollector(
                                 store: store,
                                 indexStorePath: indexStorePath
-                            )
+                            ),
+                            excludedDirectories: configuration.unusedTestableImports?.excludedDirectories,
+                            rootPath: rootPath
                         ),
                         rewriter: UnnecessaryTestableRewriter(
                             fileSystem: fileSystem,

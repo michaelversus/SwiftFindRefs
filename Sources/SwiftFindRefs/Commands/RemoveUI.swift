@@ -36,27 +36,34 @@ extension SwiftFindRefs {
             vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
             let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
             let store = try IndexStore(path: indexStorePath)
+            // Compute root path before creating compositionRoot
+            let resolvedRootPath = common.rootPath ?? fileSystem.currentDirectoryPath
+            let rootPath = resolvedRootPath.hasSuffix("/") ? resolvedRootPath : resolvedRootPath + "/"
             let compositionRoot = RemoveCompositionRoot(
                 rootPath: common.rootPath,
                 print: { print($0) },
                 vPrint: { if common.verbose { print($0) } },
                 fileSystem: fileSystem,
                 removerFactory: { configuration in
-                    UnnecessaryRemover(
+                    let ignoredModules: [String] = configuration.unusedImports?.ignoredModules ?? []
+                    let excludedDirs: [String]? = configuration.unusedImports?.excludedDirectories
+                    return UnnecessaryRemover(
                         print: { print($0) },
                         analyzer: UnnecessaryImportsAnalyzer(
                             fileSystem: fileSystem,
                             extractor: ImportExtractor(
                                 fileSystem: fileSystem,
                                 excludeCompilationConditionals: excludeCompilationConditionals,
-                                ignoredModules: configuration.unusedImports.ignoredModules,
+                                ignoredModules: ignoredModules,
                                 prefix: .regularImport
                             ),
                             collector: IndexStoreCollector(
                                 store: store,
                                 indexStorePath: indexStorePath
                             ),
-                            indexStoreImportExtractor: IndexStoreImportExtractor()
+                            indexStoreImportExtractor: IndexStoreImportExtractor(),
+                            excludedDirectories: excludedDirs,
+                            rootPath: rootPath
                         ),
                         rewriter: UnnecessaryImportsRewriter(
                             fileSystem: fileSystem,

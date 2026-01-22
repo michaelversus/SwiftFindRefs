@@ -6,16 +6,22 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
     private let fileSystem: any FileSystemProvider
     private let extractor: any ImportExtracting
     private let collector: any IndexStoreCollecting
+    private let excludedDirectories: [String]?
+    private let rootPath: String
 
     /// Initializes an analyzer with the collaborators needed to walk imports and index store data.
     init(
         fileSystem: any FileSystemProvider,
         extractor: any ImportExtracting,
-        collector: any IndexStoreCollecting
+        collector: any IndexStoreCollecting,
+        excludedDirectories: [String]? = nil,
+        rootPath: String
     ) {
         self.fileSystem = fileSystem
         self.extractor = extractor
         self.collector = collector
+        self.excludedDirectories = excludedDirectories
+        self.rootPath = rootPath
     }
 
     /// Returns a mapping from file paths to the set of `@testable` imports that are not required by any referenced symbol.
@@ -32,18 +38,20 @@ struct UnnecessaryTestableAnalyzer: UnnecessaryAnalyzing {
             }
         )
         var mutableTestableImportsByFile: [String: Set<String>] = [:]
-        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) && !FileValidation.isThirdPartyFile(unit.mainFile) {
+        for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
             let testableImports = try await extractor.imports(inFile: unit.mainFile)
             if !testableImports.isEmpty {
                 mutableTestableImportsByFile[unit.mainFile] = testableImports
             }
         }
         let testableImportsByFile = mutableTestableImportsByFile
+        let excludedDirs = excludedDirectories
+        let root = rootPath
 
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
                 group.addTask {
-                    if FileValidation.isGeneratedFile(unit.mainFile) || FileValidation.isThirdPartyFile(unit.mainFile) {
+                    if !FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirs, rootPath: root) {
                         return nil
                     }
 

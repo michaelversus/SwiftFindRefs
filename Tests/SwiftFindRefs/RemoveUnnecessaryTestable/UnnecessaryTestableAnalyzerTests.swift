@@ -52,7 +52,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -117,7 +118,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -182,7 +184,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -216,7 +219,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -308,7 +312,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -375,7 +380,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -470,7 +476,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -555,7 +562,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -599,7 +607,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -642,7 +651,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -714,7 +724,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -797,7 +808,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -881,7 +893,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When
@@ -936,7 +949,8 @@ struct UnnecessaryTestableAnalyzerTests {
         let sut = UnnecessaryTestableAnalyzer(
             fileSystem: fileSystem,
             extractor: extractor,
-            collector: collector
+            collector: collector,
+            rootPath: "/"
         )
 
         // When

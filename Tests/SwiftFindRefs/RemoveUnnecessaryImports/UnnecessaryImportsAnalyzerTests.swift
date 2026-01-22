@@ -46,7 +46,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -105,7 +106,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -157,7 +159,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -206,7 +209,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -264,7 +268,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -312,7 +317,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -370,7 +376,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -418,7 +425,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -492,7 +500,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: IndexStoreImportExtractor()
+            indexStoreImportExtractor: IndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -554,7 +563,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: IndexStoreImportExtractor()
+            indexStoreImportExtractor: IndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -616,7 +626,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -675,7 +686,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -711,7 +723,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -747,7 +760,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -809,7 +823,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -882,7 +897,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -920,7 +936,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -969,7 +986,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1028,7 +1046,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1104,7 +1123,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1153,7 +1173,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1211,7 +1232,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1273,7 +1295,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When
@@ -1334,7 +1357,8 @@ struct UnnecessaryImportsAnalyzerTests {
             fileSystem: fileSystem,
             extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor()
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            rootPath: "/"
         )
 
         // When

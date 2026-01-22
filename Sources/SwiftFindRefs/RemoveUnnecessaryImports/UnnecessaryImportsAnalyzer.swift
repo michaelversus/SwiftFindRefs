@@ -8,18 +8,24 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
     private let extractor: any ImportExtracting
     private let collector: any IndexStoreCollecting
     private let indexStoreImportExtractor: any IndexStoreImportExtracting
+    private let excludedDirectories: [String]?
+    private let rootPath: String
 
     /// Creates an analyzer that relies on the provided file system, import extractor, and index store collector type.
     init(
         fileSystem: any FileSystemProvider,
         extractor: any ImportExtracting,
         collector: any IndexStoreCollecting,
-        indexStoreImportExtractor: any IndexStoreImportExtracting
+        indexStoreImportExtractor: any IndexStoreImportExtracting,
+        excludedDirectories: [String]? = nil,
+        rootPath: String
     ) {
         self.fileSystem = fileSystem
         self.extractor = extractor
         self.collector = collector
         self.indexStoreImportExtractor = indexStoreImportExtractor
+        self.excludedDirectories = excludedDirectories
+        self.rootPath = rootPath
     }
 
     /// Returns the files that keep unnecessary imports by comparing declared modules with referenced symbols from the index store.
@@ -36,7 +42,7 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         // Pre-read file lines for IndexStore-based import extraction
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)
         var fileLinesByPath: [String: [String]] = [:]
-        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) && !FileValidation.isThirdPartyFile(unit.mainFile) {
+        for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
             if let lines = try? fileSystemBox.fileSystem.readLines(atPath: unit.mainFile) {
                 fileLinesByPath[unit.mainFile] = lines
             }
@@ -46,7 +52,7 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         // Fall back to file parsing if IndexStore doesn't have the data
         let ignoredModules = Set((extractor as? ImportExtractor)?.ignoredModules ?? [])
         var mutableImportsByFile: [String: Set<String>] = [:]
-        for unit in unitSnapshots where !FileValidation.isGeneratedFile(unit.mainFile) && !FileValidation.isThirdPartyFile(unit.mainFile) {
+        for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
             let fileLines = fileLinesByPath[unit.mainFile]
 
             // Try IndexStore-based extraction first (for regular imports)
@@ -76,11 +82,13 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
             }
         }
         let importsByFile = mutableImportsByFile
+        let excludedDirs = excludedDirectories
+        let root = rootPath
 
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
                 group.addTask {
-                    if FileValidation.isGeneratedFile(unit.mainFile) || FileValidation.isThirdPartyFile(unit.mainFile) {
+                    if !FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirs, rootPath: root) {
                         return nil
                     }
 

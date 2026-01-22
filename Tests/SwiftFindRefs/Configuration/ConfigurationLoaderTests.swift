@@ -28,7 +28,7 @@ struct ConfigurationLoaderTests {
         let configuration = try sut.loadConfiguration(at: configurationFilePath, root: "/not/used/")
 
         // Then
-        #expect(configuration == Configuration(unusedImports: UnusedImportsConfiguration(ignoredModules: ["A", "B"])))
+        #expect(configuration == Configuration(unusedImports: UnusedImportsConfiguration(ignoredModules: ["A", "B"], excludedDirectories: nil), unusedTestableImports: nil))
         #expect(fileSystem.actions.contains(.fileExists(atPath: configurationFilePath)))
         #expect(printedLines.contains("Loading configuration from: \(configurationFilePath)"))
     }
@@ -76,7 +76,7 @@ struct ConfigurationLoaderTests {
         let configuration = try sut.loadConfiguration(at: nil, root: rootPath)
 
         // Then
-        #expect(configuration.unusedImports.ignoredModules == ["Ignored"])
+        #expect(configuration.unusedImports?.ignoredModules == ["Ignored"])
         #expect(fileSystem.actions.contains(.fileExists(atPath: configurationFilePath)))
     }
 

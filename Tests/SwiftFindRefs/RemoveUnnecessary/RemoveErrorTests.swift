@@ -42,4 +42,14 @@ struct UnnecessaryTestableErrorTests {
         let error = RemoveError.missingSourceLine(file: file, line: line)
         #expect(error.errorDescription == "Could not read line \(line) in \(file).")
     }
+
+    @Test("corruptedIndexStoreDB errorDescription includes file and guidance")
+    func test_corruptedIndexStoreDB_ErrorDescription() {
+        let file = "/mock/File.swift"
+        let error = RemoveError.corruptedIndexStoreDB(file: file)
+        #expect(
+            error.errorDescription ==
+                "IndexStoreDB is corrupted for \(file). Import statements found in the source file are missing from IndexStore. Please clean derived data and rebuild using Xcode to reconstruct indexes."
+        )
+    }
 }

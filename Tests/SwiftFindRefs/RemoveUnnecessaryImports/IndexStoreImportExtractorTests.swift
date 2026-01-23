@@ -23,7 +23,6 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines: [String] = []
-        let allModuleNames: Set<String> = []
         let sut = IndexStoreImportExtractor()
 
         // When
@@ -31,8 +30,8 @@ struct IndexStoreImportExtractorTests {
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         // Then
@@ -56,16 +55,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines: [String] = ["invalid lines"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)
@@ -88,16 +85,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["@testable import ModuleA"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result == ["ModuleA"])
@@ -120,16 +115,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import  ."]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)
@@ -152,16 +145,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["@exported import ModuleC"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)
@@ -184,23 +175,23 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import ModuleA"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result == ["ModuleA"])
     }
 
-    @Test("imports ignores modules not included in allModuleNames")
-    func test_imports_IgnoresModulesNotIncludedInAllModuleNames() {
+    @Test("imports returns all modules including system frameworks")
+    func test_imports_ReturnsAllModulesIncludingSystemFrameworks() {
+        // IndexStoreImportExtractor should extract ALL imports it finds, including system frameworks
+        // and unknown modules. Filtering happens later in the analyzer.
         let mainFile = "/app/App.swift"
         let occurrencesByFile: [String: [OccurrenceSnapshot]] = [
             mainFile: [
@@ -216,19 +207,18 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import UnknownModule"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
-        #expect(result.isEmpty)
+        // Should return UnknownModule - the analyzer will handle filtering later
+        #expect(result == ["UnknownModule"])
     }
 
     @Test("imports ignores modules included in ignoredModules")
@@ -248,16 +238,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import ModuleA"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: ["ModuleA"]
+            ignoredModules: ["ModuleA"],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)
@@ -280,16 +268,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import ModuleA // @ignore-import"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)
@@ -312,16 +298,14 @@ struct IndexStoreImportExtractorTests {
             ]
         ]
         let fileLines = ["import ModuleA"]
-        let allModuleNames: Set<String> = ["App", "ModuleA"]
-
         let sut = IndexStoreImportExtractor()
 
         let result = sut.imports(
             inMainFile: mainFile,
             occurrencesByFile: occurrencesByFile,
             fileLines: fileLines,
-            allModuleNames: allModuleNames,
-            ignoredModules: []
+            ignoredModules: [],
+            vPrint: nil
         )
 
         #expect(result.isEmpty)

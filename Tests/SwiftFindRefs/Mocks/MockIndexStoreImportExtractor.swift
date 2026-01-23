@@ -7,33 +7,40 @@ final class MockIndexStoreImportExtractor: IndexStoreImportExtracting {
             inMainFile: String,
             occurrencesByFile: [String : [String]],
             fileLines: [String],
-            allModuleNames: Set<String>,
             ignoredModules: Set<String>
         )
     }
 
-    private let result: Set<String>
+    private let resultsByFile: [String: Set<String>]
 
-    init(result: Set<String> = []) {
-        self.result = result
+    init(resultsByFile: [String: Set<String>] = [:]) {
+        self.resultsByFile = resultsByFile
     }
 
     func imports(
         inMainFile mainFile: String,
         occurrencesByFile: [String : [OccurrenceSnapshot]],
         fileLines: [String],
-        allModuleNames: Set<String>,
-        ignoredModules: Set<String>
+        ignoredModules: Set<String>,
+        vPrint: ((String) -> Void)? = nil
     ) -> Set<String> {
         actions.append(
             .imports(
                 inMainFile: mainFile,
                 occurrencesByFile: occurrencesByFile.mapValues { $0.map { $0.symbolName } },
                 fileLines: fileLines,
-                allModuleNames: allModuleNames,
                 ignoredModules: ignoredModules
             )
         )
-        return result
+        
+        return resultsByFile[mainFile] ?? []
+    }
+    
+    func specificImports(
+        inMainFile mainFile: String,
+        fileLines: [String]
+    ) -> [String: String?] {
+        // Mock implementation - return empty for tests
+        return [:]
     }
 }

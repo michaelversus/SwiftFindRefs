@@ -16,7 +16,7 @@ struct IndexStoreCollector: IndexStoreCollecting {
 
     /// Scans the provided store, gathering unit readers and their occurrences grouped by main file.
     /// - Returns: A tuple containing collected unit readers and a dictionary of occurrence snapshots keyed by file path.
-    /// - Throws: `UnnecessaryTestableError.failedToLoadUnits` when the store yields no units.
+    /// - Throws: `RemoveError.failedToLoadUnits` when the store yields no units.
     func collectUnitsAndRecords() throws -> ([UnitReaderProviding], [String: [OccurrenceSnapshot]]) {
         var units: [UnitReaderProviding] = []
         var occurrencesByFile: [String: [OccurrenceSnapshot]] = [:]

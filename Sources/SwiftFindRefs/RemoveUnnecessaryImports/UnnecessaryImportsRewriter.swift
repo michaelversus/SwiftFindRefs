@@ -66,15 +66,42 @@ struct UnnecessaryImportsRewriter: UnnecessaryRewriting {
             }
 
             let suffix = trimmed.dropFirst(prefix.count)
-            // Capture contiguous non-whitespace characters (stopping at a slash) to isolate the module identifier.
-            // Examples: `import Networking//comment` keeps `Networking`, `import Foundation  // note` keeps `Foundation`.
-            let moduleName = String(suffix.prefix { !$0.isWhitespace && $0 != "/" })
+            
+            // Parse module name, handling specific imports like `import struct Module.Symbol`
+            let specificImportKeywords = ["struct", "class", "enum", "protocol", "typealias", "func", "var", "let"]
+            let parts = suffix.split(whereSeparator: { $0 == " " || $0 == "\t" })
+            
+            let moduleName: String
+            if let firstPart = parts.first,
+               specificImportKeywords.contains(String(firstPart)),
+               parts.count >= 2 {
+                // Specific import: import struct Module.Symbol
+                // Extract module name from "Module.Symbol" part
+                let moduleAndSymbol = String(parts[1])
+                if let dotIndex = moduleAndSymbol.firstIndex(of: ".") {
+                    moduleName = String(moduleAndSymbol[..<dotIndex])
+                } else {
+                    // No dot, so the second part is the module name
+                    moduleName = moduleAndSymbol
+                }
+            } else if let firstPart = parts.first {
+                // Regular import: import Module
+                // Capture contiguous non-whitespace characters (stopping at a slash) to isolate the module identifier.
+                // Examples: `import Networking//comment` keeps `Networking`, `import Foundation  // note` keeps `Foundation`.
+                moduleName = String(firstPart.prefix { !$0.isWhitespace && $0 != "/" })
+            } else {
+                // Can't parse, keep the import to be safe
+                retainedLines.append(line)
+                continue
+            }
+            
             guard !moduleName.isEmpty else {
                 retainedLines.append(line)
                 continue
             }
 
             // Only remove imports that are in the modules set (unnecessary imports)
+            // Note: The analyzer already verified that specific imports with used symbols are not in this set
             if modules.contains(moduleName) {
                 hasChanges = true
                 continue  // Skip this line (remove the import)

@@ -17,9 +17,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -27,7 +24,17 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleFile: [
                         OccurrenceSnapshot(
                             symbolKind: .class,
@@ -44,9 +51,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -66,9 +73,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nlet instance = Foo()\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let fooUSR = "usr:Foo"
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -78,6 +82,15 @@ struct UnnecessaryImportsAnalyzerTests {
                 ],
                 [
                     appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
                         OccurrenceSnapshot(
                             symbolKind: .class,
                             roles: [.reference],
@@ -104,9 +117,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -126,9 +139,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nimport UnknownModule\n",
             moduleAFile: "public class Foo {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA", "UnknownModule"]
-        ])
         // UnknownModule is imported but has no units in the index store at all
         // This means it won't be in allModuleNames, so it will be filtered out
         // ModuleA has a unit, so it will be in allModuleNames
@@ -140,7 +150,26 @@ struct UnnecessaryImportsAnalyzerTests {
                     // UnknownModule has no units, so it won't be in allModuleNames
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 2,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@UnknownModule",
+                            symbolName: "UnknownModule",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleAFile: [
                         OccurrenceSnapshot(
                             symbolKind: .class,
@@ -157,9 +186,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -180,9 +209,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -190,7 +216,17 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleFile: [
                         OccurrenceSnapshot(
                             symbolKind: .class,
@@ -207,9 +243,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -228,9 +264,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [MyType] {}\n",
             moduleFile: "typealias MyType = String\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -266,9 +299,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -288,9 +321,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nlet x = 42\n",
             moduleFile: "typealias MyType = String\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -298,7 +328,17 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleFile: [
                         OccurrenceSnapshot(
                             symbolKind: .typealias,
@@ -315,9 +355,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -336,9 +376,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [IntArray] {}\n",
             moduleFile: "typealias IntArray = [Int]\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -374,9 +411,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -396,9 +433,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nimport UnknownModule\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA", "UnknownModule"] // UnknownModule is not in the index store
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -406,7 +440,26 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 2,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@UnknownModule",
+                            symbolName: "UnknownModule",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleFile: [
                         OccurrenceSnapshot(
                             symbolKind: .class,
@@ -423,9 +476,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -446,13 +499,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA // @ignore-import\nimport ModuleB\n",
             moduleFile: "public class Foo {}\n"
         ])
-        // Use real ImportExtractor so IndexStore-based extraction works
-        let extractor = ImportExtractor(
-            fileSystem: fileSystem,
-            excludeCompilationConditionals: false,
-            ignoredModules: [],
-            prefix: .regularImport
-        )
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -498,9 +544,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
             indexStoreImportExtractor: IndexStoreImportExtractor(),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -521,12 +567,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\n",
             moduleFile: "public class Foo {}\n"
         ])
-        let extractor = ImportExtractor(
-            fileSystem: fileSystem,
-            excludeCompilationConditionals: false,
-            ignoredModules: [],
-            prefix: .regularImport
-        )
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -561,9 +601,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
             indexStoreImportExtractor: IndexStoreImportExtractor(),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -587,9 +627,6 @@ struct UnnecessaryImportsAnalyzerTests {
         // Make sure the referencing file has a capitalized symbol name in the referenced names set.
         // Also ensure the module has at least one file with occurrences, otherwise the analyzer
         // intentionally skips the source-scan fallback (it uses that only when the module is indexed).
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -624,9 +661,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -645,9 +682,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nlet instance = MyClass()\n",
             moduleFile: "public class MyClass {}\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         // USRs don't match but symbol names do
         let collector = MockIndexStoreCollector(
@@ -684,9 +718,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -704,9 +738,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             generatedFile: "import ModuleA\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            generatedFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -721,9 +752,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [generatedFile: []]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -741,9 +772,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             thirdPartyFile: "import ModuleA\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            thirdPartyFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -758,9 +786,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [thirdPartyFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -782,9 +810,6 @@ struct UnnecessaryImportsAnalyzerTests {
             moduleAFile: "public class ClassA {}\n",
             moduleBFile: "public class ClassB {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA", "ModuleB"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -793,7 +818,26 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleBFile, moduleName: "ModuleB")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 2,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleB",
+                            symbolName: "ModuleB",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleAFile: [
                         OccurrenceSnapshot(
                             symbolKind: .class,
@@ -821,9 +865,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA", "ModuleB"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -845,9 +889,6 @@ struct UnnecessaryImportsAnalyzerTests {
             moduleAFile: "public class ClassA {}\n",
             moduleBFile: "public class ClassB {}\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA", "ModuleB"]
-        ])
         let classAUSR = "usr:ClassA"
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -858,6 +899,24 @@ struct UnnecessaryImportsAnalyzerTests {
                 ],
                 [
                     appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 2,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleB",
+                            symbolName: "ModuleB",
+                            relatedSymbols: []
+                        ),
                         OccurrenceSnapshot(
                             symbolKind: .class,
                             roles: [.reference],
@@ -895,9 +954,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA", "ModuleB"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -917,9 +976,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\n",
             moduleFile: "\n" // Empty file
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -927,16 +983,26 @@ struct UnnecessaryImportsAnalyzerTests {
                     MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
                 ],
                 [
-                    appFile: [],
+                    appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        )
+                    ],
                     moduleFile: [] // No occurrences for empty file
                 ]
             ))
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -955,9 +1021,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [MyType] {}\n",
             moduleFile: "typealias MyType = String\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         // Typealias is NOT in occurrences (simulating case where it's not properly indexed)
         let collector = MockIndexStoreCollector(
@@ -984,9 +1047,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1005,9 +1068,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [MyType] {}\n",
             moduleFile: "typealias MyType = String\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         // Typealias IS in occurrences (properly indexed)
         let collector = MockIndexStoreCollector(
@@ -1044,9 +1104,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1065,9 +1125,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [TypeA] {}\nextension [TypeB] {}\n",
             moduleFile: "typealias TypeA = String\ntypealias TypeB = Int\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -1121,9 +1178,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1142,9 +1199,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nextension [MyType] {}\n",
             moduleFile: "  typealias   MyType   =   String  \n" // Various whitespace
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         // Typealias not in occurrences, should be found via file reading
         let collector = MockIndexStoreCollector(
@@ -1171,9 +1225,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1193,9 +1247,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nextension [OtherType] {}\n",
             moduleFile: "typealias MyType = String\n"
         ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
-        ])
         let collector = MockIndexStoreCollector(
             result: .success((
                 [
@@ -1204,6 +1255,15 @@ struct UnnecessaryImportsAnalyzerTests {
                 ],
                 [
                     appFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .module,
+                            roles: [.reference],
+                            locationLine: 1,
+                            locationColumn: 8,
+                            symbolUSR: "c:@M@ModuleA",
+                            symbolName: "ModuleA",
+                            relatedSymbols: []
+                        ),
                         OccurrenceSnapshot(
                             symbolKind: .extension,
                             roles: [],
@@ -1230,9 +1290,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1253,9 +1313,6 @@ struct UnnecessaryImportsAnalyzerTests {
             appFile: "import ModuleA\nextension [MyType] {}\n",
             moduleFile1: "public class SomeClass {}\n",
             moduleFile2: "typealias MyType = String\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         let collector = MockIndexStoreCollector(
             result: .success((
@@ -1293,9 +1350,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1314,9 +1371,6 @@ struct UnnecessaryImportsAnalyzerTests {
         let fileSystem = MockFileSystem(readFileResults: [
             appFile: "import ModuleA\nlet property: SomeLogger\n",
             moduleFile: "public class SomeLogger {}\n"
-        ])
-        let extractor = MockImportExtractor(resultsByFile: [
-            appFile: ["ModuleA"]
         ])
         // Property USR contains the type USR as a substring
         let propertyUSR = "s:6SomeModule4SomeFileO12someProperty0A9SomeModule8SomeLoggerCvpZ"
@@ -1355,9 +1409,9 @@ struct UnnecessaryImportsAnalyzerTests {
         )
         let sut = UnnecessaryImportsAnalyzer(
             fileSystem: fileSystem,
-            extractor: extractor,
             collector: collector,
-            indexStoreImportExtractor: MockIndexStoreImportExtractor(),
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
+            ignoredModules: [],
             rootPath: "/"
         )
 
@@ -1367,5 +1421,57 @@ struct UnnecessaryImportsAnalyzerTests {
         // Then - USR substring matching should keep the import
         // Note: This test may need adjustment based on actual USR matching logic
         #expect(result.isEmpty || result == [appFile: ["ModuleA"]])
+    }
+
+    @Test("analyze throws corruptedIndexStoreDB when IndexStore has no occurrences for file with imports")
+    func test_analyze_ThrowsCorruptedIndexStoreDB_WhenIndexStoreMissingImports() async {
+        // Given - File has imports but IndexStore has NO occurrences at all for this file
+        let appFile = "/app/App.swift"
+        let moduleFile = "/modules/ModuleA.swift"
+        let fileSystem = MockFileSystem(readFileResults: [
+            appFile: "import ModuleA\nimport ModuleB\n",
+            moduleFile: "public class Foo {}\n"
+        ])
+        let collector = MockIndexStoreCollector(
+            result: .success((
+                [
+                    MockUnitReader(isSystem: false, mainFile: appFile, moduleName: "App"),
+                    MockUnitReader(isSystem: false, mainFile: moduleFile, moduleName: "ModuleA")
+                ],
+                [
+                    appFile: [], // No occurrences at all - this indicates IndexStoreDB corruption
+                    moduleFile: [
+                        OccurrenceSnapshot(
+                            symbolKind: .class,
+                            roles: [.definition],
+                            locationLine: 1,
+                            locationColumn: 1,
+                            symbolUSR: "usr:Foo",
+                            symbolName: "Foo",
+                            relatedSymbols: []
+                        )
+                    ]
+                ]
+            ))
+        )
+        let sut = UnnecessaryImportsAnalyzer(
+            fileSystem: fileSystem,
+            collector: collector,
+            // MockIndexStoreImportExtractor will return empty since there are no occurrences
+            indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: []]),
+            ignoredModules: [],
+            rootPath: "/"
+        )
+
+        // When / Then
+        let error = await #expect(throws: RemoveError.self) {
+            _ = try await sut.analyze()
+        }
+        
+        guard case .corruptedIndexStoreDB(let file) = error else {
+            Issue.record("Expected .corruptedIndexStoreDB but received \(error)")
+            return
+        }
+        #expect(file == appFile)
     }
 }

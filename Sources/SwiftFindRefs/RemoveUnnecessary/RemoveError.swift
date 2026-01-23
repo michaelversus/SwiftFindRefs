@@ -12,6 +12,8 @@ enum RemoveError: Error, LocalizedError {
     case missingModuleInIndex(file: String, modules: Set<String>)
     /// The expected source line could not be read, for example because the file changed.
     case missingSourceLine(file: String, line: Int)
+    /// IndexStoreDB is corrupted - imports found in source file are missing from IndexStore.
+    case corruptedIndexStoreDB(file: String)
 
     /// A localized description suitable for logging or user dialogs.
     var errorDescription: String? {
@@ -26,6 +28,8 @@ enum RemoveError: Error, LocalizedError {
             return "Some modules imported with were not included in the index \(file): \(modules)"
         case .missingSourceLine(let file, let line):
             return "Could not read line \(line) in \(file)."
+        case .corruptedIndexStoreDB(let file):
+            return "IndexStoreDB is corrupted for \(file). Import statements found in the source file are missing from IndexStore. Please clean derived data and rebuild using Xcode to reconstruct indexes."
         }
     }
 }

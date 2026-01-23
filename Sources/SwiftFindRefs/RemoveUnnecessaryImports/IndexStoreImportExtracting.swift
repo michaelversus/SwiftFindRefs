@@ -8,13 +8,26 @@ protocol IndexStoreImportExtracting {
     ///   - mainFile: The file to extract import statements from.
     ///   - occurrencesByFile: Mapping of file paths to symbol occurrences for that file.
     ///   - fileLines: The file contents split by line (1 line per element).
-    ///   - allModuleNames: All module names present in the index store (used for filtering).
     ///   - ignoredModules: Module names that should not be considered.
+    /// - Returns: All imported module names found in the file, including system frameworks.
     func imports(
         inMainFile mainFile: String,
         occurrencesByFile: [String: [OccurrenceSnapshot]],
         fileLines: [String],
-        allModuleNames: Set<String>,
-        ignoredModules: Set<String>
+        ignoredModules: Set<String>,
+        vPrint: ((String) -> Void)?
     ) -> Set<String>
+    
+    /// Returns a mapping of import lines to their specific symbol names (if any).
+    /// For specific imports like `import struct Module.SomeStruct`, returns the symbol name.
+    /// For regular imports, returns nil.
+    ///
+    /// - Parameters:
+    ///   - mainFile: The file to extract import statements from.
+    ///   - fileLines: The file contents split by line (1 line per element).
+    /// - Returns: Mapping of full import line to optional specific symbol name.
+    func specificImports(
+        inMainFile mainFile: String,
+        fileLines: [String]
+    ) -> [String: String?]
 }

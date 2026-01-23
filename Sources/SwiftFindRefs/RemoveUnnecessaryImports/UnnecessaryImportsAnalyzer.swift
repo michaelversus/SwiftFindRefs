@@ -5,27 +5,30 @@ import Foundation
 struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
 
     private let fileSystem: any FileSystemProvider
-    private let extractor: any ImportExtracting
     private let collector: any IndexStoreCollecting
     private let indexStoreImportExtractor: any IndexStoreImportExtracting
+    private let ignoredModules: Set<String>
     private let excludedDirectories: [String]?
     private let rootPath: String
+    private let vPrint: (String) -> Void
 
-    /// Creates an analyzer that relies on the provided file system, import extractor, and index store collector type.
+    /// Creates an analyzer that relies on the provided file system, index store collector, and import extractor.
     init(
         fileSystem: any FileSystemProvider,
-        extractor: any ImportExtracting,
         collector: any IndexStoreCollecting,
         indexStoreImportExtractor: any IndexStoreImportExtracting,
+        ignoredModules: Set<String> = [],
         excludedDirectories: [String]? = nil,
-        rootPath: String
+        rootPath: String,
+        vPrint: @escaping (String) -> Void = { _ in }
     ) {
         self.fileSystem = fileSystem
-        self.extractor = extractor
         self.collector = collector
         self.indexStoreImportExtractor = indexStoreImportExtractor
+        self.ignoredModules = ignoredModules
         self.excludedDirectories = excludedDirectories
         self.rootPath = rootPath
+        self.vPrint = vPrint
     }
 
     /// Returns the files that keep unnecessary imports by comparing declared modules with referenced symbols from the index store.
@@ -33,7 +36,10 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
     /// - Throws: `RemoveError.missingModuleInIndex` when expected modules lack occurrences inside the index.
     func analyze() async throws -> [String: Set<String>] {
         let (units, occurrencesByFile) = try collector.collectUnitsAndRecords()
-        let unitSnapshots = units.map { UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName) }
+        let unitSnapshots: [UnitSnapshot] = units.compactMap {
+            guard !$0.moduleName.isEmpty else { return nil }
+            return UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName)
+        }
         let unitsByModule = Dictionary(grouping: unitSnapshots, by: \.moduleName)
 
         // Collect all module names for filtering imports
@@ -43,6 +49,9 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)
         var fileLinesByPath: [String: [String]] = [:]
         for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
+            if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                print("Reading lines for \(unit.mainFile)")
+            }
             if let lines = try? fileSystemBox.fileSystem.readLines(atPath: unit.mainFile) {
                 fileLinesByPath[unit.mainFile] = lines
             }
@@ -50,40 +59,54 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
 
         // Extract imports using IndexStore for regular imports (more accurate)
         // Fall back to file parsing if IndexStore doesn't have the data
-        let ignoredModules = Set((extractor as? ImportExtractor)?.ignoredModules ?? [])
         var mutableImportsByFile: [String: Set<String>] = [:]
+        var specificImportsByFile: [String: [String: String?]] = [:]
         for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
             let fileLines = fileLinesByPath[unit.mainFile]
 
-            // Try IndexStore-based extraction first (for regular imports)
-            // Only use IndexStore for regular imports, not @testable imports
-            let isRegularImport = (extractor as? ImportExtractor)?.prefix == .regularImport
-            let indexStoreImports: Set<String>
-            if isRegularImport, let fileLines {
-                indexStoreImports = indexStoreImportExtractor.imports(
+            // Use IndexStore-based extraction for all imports (regular and @testable)
+            // IndexStoreImportExtractor handles both types of imports
+            var imports: Set<String>
+            if let fileLines {
+                imports = indexStoreImportExtractor.imports(
                     inMainFile: unit.mainFile,
                     occurrencesByFile: occurrencesByFile,
                     fileLines: fileLines,
-                    allModuleNames: allModuleNames,
-                    ignoredModules: ignoredModules
+                    ignoredModules: ignoredModules,
+                    vPrint: vPrint
                 )
-            } else {
-                indexStoreImports = []
-            }
-
-            if !indexStoreImports.isEmpty {
-                mutableImportsByFile[unit.mainFile] = indexStoreImports
-            } else {
-                // Fall back to file parsing (needed for @testable imports or when IndexStore doesn't have module symbols)
-                let fileParsedImports = try await extractor.imports(inFile: unit.mainFile)
-                if !fileParsedImports.isEmpty {
-                    mutableImportsByFile[unit.mainFile] = fileParsedImports
+                if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                    print("Extracted imports for \(unit.mainFile): \(imports)")
                 }
+
+                // Track specific imports (import struct Module.Symbol)
+                specificImportsByFile[unit.mainFile] = indexStoreImportExtractor.specificImports(
+                    inMainFile: unit.mainFile,
+                    fileLines: fileLines
+                )
+                
+                // Validate that IndexStore captured imports from files that have them
+                // If fileLines contains import statements but IndexStore extracted nothing, IndexStoreDB is corrupted
+                let importLineNumbers = Self.findImportLineNumbers(fileLines, ignoredModules: ignoredModules)
+                
+                if !importLineNumbers.isEmpty && imports.isEmpty {
+                    // File has imports but IndexStore extracted nothing - this indicates corruption
+                    throw RemoveError.corruptedIndexStoreDB(file: unit.mainFile)
+                }
+            } else {
+                // If fileLines are not available, return empty (shouldn't happen in normal flow)
+                imports = []
+            }
+            
+            if !imports.isEmpty {
+                mutableImportsByFile[unit.mainFile] = imports
             }
         }
         let importsByFile = mutableImportsByFile
+        let specificImportsMap = specificImportsByFile
         let excludedDirs = excludedDirectories
         let root = rootPath
+        
 
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
@@ -97,12 +120,6 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                         return nil
                     }
 
-                    // Filter imports to only known modules (like the example does)
-                    let allImports = imports.intersection(allModuleNames)
-                    if allImports.isEmpty {
-                        return nil
-                    }
-
                     // Read file lines for typealias extraction
                     let fileLines = try? fileSystemBox.fileSystem.readLines(atPath: unit.mainFile)
 
@@ -112,20 +129,58 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                         fileLines: fileLines
                     )
 
+                    if unit.mainFile.contains("Stoiximan/BrandColors.swift") { //|| unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                        print("Referenced USRs for \(unit.mainFile): \(referencedUSRs)")
+                        print("Referenced Names for \(unit.mainFile): \(referencedNames)")
+                        print("Referenced Typealiases for \(unit.mainFile): \(referencedTypealiases)")
+                    }
+
                     var seenModules = Set<String>()
                     var requiredImports = Set<String>()
 
-                    for moduleName in allImports {
+                    for moduleName in imports {
                         if requiredImports.contains(moduleName) {
                             continue
                         }
-                        guard let dependentUnits = unitsByModule[moduleName] else {
+                        
+                        // Check if this is a project module (has dependentUnits)
+                        // For project modules, use precise checks. For system frameworks, use USR contains check.
+                        let isProjectModule = allModuleNames.contains(moduleName)
+                        
+                        // For system frameworks or modules not in unitsByModule, check if USR contains module name
+                        // USRs encode module names, so this works for system frameworks
+                        if !isProjectModule {
+                            if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                                print("Checking system framework module \(moduleName) for \(unit.mainFile)")
+                            }
+                            // System framework - check if any referenced USR contains the module name
+                            // USR format encodes module names, e.g., "UIKit" appears in UIKit symbol USRs
+                            // Use a more precise pattern: module name should appear after @M@ (module marker) or @CM@ (class module marker)
+                            let modulePattern = "c:@M@\(moduleName)" // Module marker pattern
+                            let classModulePattern = "@CM@\(moduleName)" // Class module marker pattern
+                            for referencedUSR in referencedUSRs {
+                                // Check if the USR contains the module name in a module context
+                                guard referencedUSR != modulePattern && referencedUSR != classModulePattern else {
+                                    continue
+                                }
+                                if referencedUSR.contains(modulePattern) || referencedUSR.contains(classModulePattern) || referencedUSR.hasSuffix("@\(moduleName)") {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                            }
+                            
+                            // Mark system frameworks as seen
+                            seenModules.insert(moduleName)
                             continue
                         }
 
-                        var hadOccurrences = false
+                        // For project modules, do precise checks using dependentUnits
+                        // This provides better accuracy by matching exact USRs from module definitions
+                        if let dependentUnits = unitsByModule[moduleName] {
 
-                        for dependentUnit in dependentUnits {
+                            var hadOccurrences = false
+
+                            for dependentUnit in dependentUnits {
                             guard let occurrences = occurrencesByFile[dependentUnit.mainFile] else {
                                 // Empty files have units but no records - continue checking other files
                                 continue
@@ -210,113 +265,120 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                                     }
                                 }
                             }
-                            if requiredImports.contains(moduleName) {
-                                break
-                            }
-                        }
-
-                        // If module has units but no files with occurrences, still mark as seen
-                        // (empty files have units but no records - this is expected)
-                        // This ensures we don't throw missingModuleInIndex for modules that exist but are empty
-                        if !hadOccurrences && !dependentUnits.isEmpty {
-                            hadOccurrences = true
-                        }
-
-                        // Safety check: If we haven't found any matching definitions but a capitalized type name from referencedNames
-                        // is present, check the source files directly. This handles cases where external SDKs aren't indexed properly.
-                        // Only check if we haven't already marked the import as required.
-                        if !requiredImports.contains(moduleName) && !referencedNames.isEmpty && hadOccurrences {
-                            // Check if any referenced name is a capitalized type name (likely a class/struct/enum)
-                            // and check if it might be from this module by reading the module's source files
-                            let capitalizedTypeNames = referencedNames.filter {
-                                !$0.isEmpty &&
-                                $0.first?.isUppercase == true &&
-                                !$0.contains("(") && // Exclude function names
-                                !$0.contains("getter:") &&
-                                !$0.contains("setter:")
-                            }
-
-                            if !capitalizedTypeNames.isEmpty {
-                                // Check if any of these type names appear in the module's source files
-                                for dependentUnit in dependentUnits {
-                                    if let moduleFileLines = try? fileSystemBox.fileSystem.readLines(atPath: dependentUnit.mainFile) {
-                                        for line in moduleFileLines {
-                                            for typeName in capitalizedTypeNames {
-                                                // Check if the type name appears in the file (as a class/struct/enum declaration or usage)
-                                                if line.contains("class \(typeName)") ||
-                                                   line.contains("struct \(typeName)") ||
-                                                   line.contains("enum \(typeName)") ||
-                                                   line.contains("protocol \(typeName)") ||
-                                                   line.contains("typealias \(typeName)") ||
-                                                   (line.contains(typeName) && (line.contains("import") || line.contains(": \(typeName)") || line.contains("\(typeName)."))) {
-                                                    requiredImports.insert(moduleName)
-                                                    break
-                                                }
-                                            }
-                                            if requiredImports.contains(moduleName) {
-                                                break
-                                            }
-                                        }
-                                    }
-                                    if requiredImports.contains(moduleName) {
-                                        break
-                                    }
-                                }
-                            }
-                        }
-
-                        // Check typealias matches
-                        // IMPORTANT: The example only matches typealiases if the module is already imported
-                        // This is a safety check: "if we're already importing this module, and there's a typealias match, then keep the import"
-                        if !requiredImports.contains(moduleName) && !referencedTypealiases.isEmpty && allImports.contains(moduleName) {
-                            // Check if any referenced typealiases are defined in this module
-                            // We need to check both files with occurrences (for typealias definitions in index)
-                            // and read files directly (for typealiases that might not be indexed properly)
-                            for dependentUnit in dependentUnits {
-                                // First check if any occurrences are typealias definitions
-                                if let occurrences = occurrencesByFile[dependentUnit.mainFile] {
-                                    for occurrence in occurrences {
-                                        if occurrence.roles.contains(.definition) &&
-                                           occurrence.symbolKind == .typealias &&
-                                           referencedTypealiases.contains(occurrence.symbolName) {
-                                            requiredImports.insert(moduleName)
-                                            break
-                                        }
-                                    }
-                                    if requiredImports.contains(moduleName) {
-                                        break
-                                    }
-                                }
-
-                                // Also read file to extract typealias definitions (for cases where typealiases aren't properly indexed)
-                                if let moduleFileLines = try? fileSystemBox.fileSystem.readLines(atPath: dependentUnit.mainFile) {
-                                    for line in moduleFileLines {
-                                        let trimmed = line.trimmingCharacters(in: .whitespaces)
-                                        if trimmed.hasPrefix("typealias ") {
-                                            let parts = trimmed.dropFirst("typealias ".count).split(whereSeparator: { $0 == " " || $0 == "=" })
-                                            if let typealiasName = parts.first {
-                                                let name = String(typealiasName).trimmingCharacters(in: .whitespaces)
-                                                if referencedTypealiases.contains(name) {
-                                                    requiredImports.insert(moduleName)
-                                                    break
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
                                 if requiredImports.contains(moduleName) {
                                     break
                                 }
                             }
-                        }
 
-                        if hadOccurrences {
+                            // If module has units but no files with occurrences, still mark as seen
+                            // (empty files have units but no records - this is expected)
+                            // This ensures we don't throw missingModuleInIndex for modules that exist but are empty
+                            if !hadOccurrences && !dependentUnits.isEmpty {
+                                hadOccurrences = true
+                            }
+
+                            // Safety check: If we haven't found any matching definitions but a capitalized type name from referencedNames
+                            // is present, check the source files directly. This handles cases where external SDKs aren't indexed properly.
+                            // Only check if we haven't already marked the import as required.
+                            if !requiredImports.contains(moduleName) && !referencedNames.isEmpty && hadOccurrences {
+                                // Check if any referenced name is a capitalized type name (likely a class/struct/enum)
+                                // and check if it might be from this module by reading the module's source files
+                                let capitalizedTypeNames = referencedNames.filter {
+                                    !$0.isEmpty &&
+                                    $0.first?.isUppercase == true &&
+                                    !$0.contains("(") && // Exclude function names
+                                    !$0.contains("getter:") &&
+                                    !$0.contains("setter:")
+                                }
+
+                                if !capitalizedTypeNames.isEmpty {
+                                    // Check if any of these type names appear in the module's source files
+                                    for dependentUnit in dependentUnits {
+                                        if let moduleFileLines = try? fileSystemBox.fileSystem.readLines(atPath: dependentUnit.mainFile) {
+                                            for line in moduleFileLines {
+                                                for typeName in capitalizedTypeNames {
+                                                    // Check if the type name appears in the file (as a class/struct/enum declaration or usage)
+                                                    if line.contains("class \(typeName)") ||
+                                                       line.contains("struct \(typeName)") ||
+                                                       line.contains("enum \(typeName)") ||
+                                                       line.contains("protocol \(typeName)") ||
+                                                       line.contains("typealias \(typeName)") ||
+                                                       (line.contains(typeName) && (line.contains("import") || line.contains(": \(typeName)") || line.contains("\(typeName)."))) {
+                                                        requiredImports.insert(moduleName)
+                                                        break
+                                                    }
+                                                }
+                                                if requiredImports.contains(moduleName) {
+                                                    break
+                                                }
+                                            }
+                                        }
+                                        if requiredImports.contains(moduleName) {
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Check typealias matches
+                            // IMPORTANT: The example only matches typealiases if the module is already imported
+                            // This is a safety check: "if we're already importing this module, and there's a typealias match, then keep the import"
+                            if !requiredImports.contains(moduleName) && !referencedTypealiases.isEmpty && imports.contains(moduleName) {
+                                // Check if any referenced typealiases are defined in this module
+                                // We need to check both files with occurrences (for typealias definitions in index)
+                                // and read files directly (for typealiases that might not be indexed properly)
+                                for dependentUnit in dependentUnits {
+                                    // First check if any occurrences are typealias definitions
+                                    if let occurrences = occurrencesByFile[dependentUnit.mainFile] {
+                                        for occurrence in occurrences {
+                                            if occurrence.roles.contains(.definition) &&
+                                               occurrence.symbolKind == .typealias &&
+                                               referencedTypealiases.contains(occurrence.symbolName) {
+                                                requiredImports.insert(moduleName)
+                                                break
+                                            }
+                                        }
+                                        if requiredImports.contains(moduleName) {
+                                            break
+                                        }
+                                    }
+
+                                    // Also read file to extract typealias definitions (for cases where typealiases aren't properly indexed)
+                                    if let moduleFileLines = try? fileSystemBox.fileSystem.readLines(atPath: dependentUnit.mainFile) {
+                                        for line in moduleFileLines {
+                                            let trimmed = line.trimmingCharacters(in: .whitespaces)
+                                            if trimmed.hasPrefix("typealias ") {
+                                                let parts = trimmed.dropFirst("typealias ".count).split(whereSeparator: { $0 == " " || $0 == "=" })
+                                                if let typealiasName = parts.first {
+                                                    let name = String(typealiasName).trimmingCharacters(in: .whitespaces)
+                                                    if referencedTypealiases.contains(name) {
+                                                        requiredImports.insert(moduleName)
+                                                        break
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if requiredImports.contains(moduleName) {
+                                        break
+                                    }
+                                }
+                            }
+
+                            if hadOccurrences {
+                                seenModules.insert(moduleName)
+                            }
+                        } else {
+                            // Module not found in unitsByModule - this shouldn't happen for project modules
+                            // but handle gracefully
                             seenModules.insert(moduleName)
                         }
                     }
 
-                    let missingModules = allImports.subtracting(seenModules)
+                    // Only check for missing modules among project modules (not system frameworks)
+                    let projectModuleImportsToCheck = imports.intersection(allModuleNames)
+                    let missingModules = projectModuleImportsToCheck.subtracting(seenModules)
                     if !missingModules.isEmpty {
                         throw RemoveError.missingModuleInIndex(
                             file: unit.mainFile,
@@ -324,9 +386,60 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                         )
                     }
 
-                    let unnecessary = allImports
+                    var unnecessary = imports
                         .intersection(seenModules)
                         .subtracting(requiredImports)
+
+                    // Filter out specific imports if their specific symbol is used
+                    // For imports like `import struct Module.SomeStruct`, we need to check if SomeStruct is used
+                    if let fileSpecificImports = specificImportsMap[unit.mainFile] {
+                        var modulesToKeep = Set<String>()
+                        
+                        for (importLine, specificSymbol) in fileSpecificImports {
+                            // Extract module name from the import line
+                            let trimmed = importLine.trimmingCharacters(in: .whitespaces)
+                            let prefix = trimmed.hasPrefix("@testable import ") ? "@testable import " : "import "
+                            let importPart = trimmed.dropFirst(prefix.count)
+                            
+                            // Parse module name (handle specific imports like "struct Module.Symbol")
+                            let parts = importPart.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "." })
+                            let moduleName: String
+                            if let firstPart = parts.first,
+                               ["struct", "class", "enum", "protocol", "typealias", "func", "var", "let"].contains(String(firstPart)),
+                               parts.count >= 2 {
+                                // Specific import: import struct Module.Symbol
+                                moduleName = String(parts[1])
+                            } else if let firstPart = parts.first {
+                                // Regular import: import Module
+                                moduleName = String(firstPart)
+                            } else {
+                                continue
+                            }
+                            
+                            // If this is a specific import and the symbol is used, keep the import
+                            if let symbol = specificSymbol, !symbol.isEmpty {
+                                // Check if the specific symbol is referenced
+                                if referencedNames.contains(symbol) || referencedTypealiases.contains(symbol) {
+                                    modulesToKeep.insert(moduleName)
+                                } else {
+                                    // Check if symbol appears in USRs (for types)
+                                    var symbolFoundInUSR = false
+                                    for referencedUSR in referencedUSRs {
+                                        if referencedUSR.contains(symbol) {
+                                            symbolFoundInUSR = true
+                                            break
+                                        }
+                                    }
+                                    if symbolFoundInUSR {
+                                        modulesToKeep.insert(moduleName)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Remove modules that have specific imports with used symbols
+                        unnecessary = unnecessary.subtracting(modulesToKeep)
+                    }
 
                     if !unnecessary.isEmpty {
                         return (unit.mainFile, unnecessary)
@@ -345,4 +458,46 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
             return results
         }
     }
+    
+    /// Finds line numbers that contain import statements.
+    /// - Parameters:
+    ///   - fileLines: The file contents split by line
+    ///   - ignoredModules: Module names that should be ignored
+    /// - Returns: Set of line numbers (1-indexed) containing import statements
+    private static func findImportLineNumbers(_ fileLines: [String], ignoredModules: Set<String>) -> Set<Int> {
+        var importLines = Set<Int>()
+        let ignoreRegex = try! Regex(#"// *@ignore-import$"#)
+        
+        for (index, line) in fileLines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            
+            // Skip empty lines and comments
+            guard !trimmed.isEmpty && !trimmed.hasPrefix("//") else {
+                continue
+            }
+            
+            // Check for @ignore-import comment
+            if line.firstMatch(of: ignoreRegex) != nil {
+                continue
+            }
+            
+            // Check for import statements
+            if trimmed.hasPrefix("@testable import ") || trimmed.hasPrefix("import ") {
+                // Parse module name to check if it's ignored
+                let prefix = trimmed.hasPrefix("@testable import ") ? "@testable import " : "import "
+                let modulePart = trimmed.dropFirst(prefix.count)
+                if let moduleNamePart = modulePart.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "." || $0 == "/" }).first,
+                   !moduleNamePart.isEmpty {
+                    let moduleName = String(moduleNamePart)
+                    // Only include if not ignored
+                    if !ignoredModules.contains(moduleName) {
+                        importLines.insert(index + 1) // Convert to 1-indexed
+                    }
+                }
+            }
+        }
+        
+        return importLines
+    }
+    
 }

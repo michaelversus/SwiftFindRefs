@@ -105,13 +105,3 @@ extension SwiftFindRefs {
         }
     }
 }
-
-extension SwiftFindRefs {
-    static let version: String = {
-        guard let url = Bundle.module.url(forResource: "VERSION", withExtension: nil),
-              let content = try? String(contentsOf: url, encoding: .utf8) else {
-            return "unknown"
-        }
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
-    }()
-}

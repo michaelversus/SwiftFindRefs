@@ -5,6 +5,6 @@ import Testing
 struct SwiftFindRefsTests {
     @Test
     func `Verify CLI version uses VERSION file`() {
-        #expect(SwiftFindRefs.configuration.version == SwiftFindRefs.version)
+        #expect(SwiftFindRefs.configuration.version == version)
     }
 }

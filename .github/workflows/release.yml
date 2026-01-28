@@ -30,7 +30,7 @@ jobs:
         id: version
         run: |
           # Read version from VERSION file
-          CURRENT=$(cat Sources/SwiftFindRefs/VERSION | tr -d '\n')
+          CURRENT=$(cat VERSION | tr -d '\n')
           echo "Current version: $CURRENT"
 
           # Parse version components
@@ -54,13 +54,17 @@ jobs:
 
       - name: Update VERSION file
         run: |
-          echo "${{ steps.version.outputs.new }}" > Sources/SwiftFindRefs/VERSION
+          echo "${{ steps.version.outputs.new }}" > VERSION
+
+      - name: Update Version.swift
+        run: |
+          echo 'let version = "${{ steps.version.outputs.new }}"' > Sources/SwiftFindRefs/Version.swift
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Sources/SwiftFindRefs/VERSION
+          git add VERSION Sources/SwiftFindRefs/Version.swift
           git commit -m "bump up version"
           git push
 

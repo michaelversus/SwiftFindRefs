@@ -1,7 +1,7 @@
 # Version is managed by the VERSION file - do not edit manually
 # Run the Release workflow to bump version automatically
 class Swiftfindrefs < Formula
-  APP_VERSION = File.read(File.join(__dir__, "VERSION")).strip.freeze
+  APP_VERSION = File.read(File.join(__dir__, "Sources/SwiftFindRefs/VERSION")).strip.freeze
 
   desc "SwiftFindRefs is a macOS Swift CLI that resolves a project's DerivedData, reads Xcode's IndexStore, and reports every file referencing a chosen symbol, with optional verbose tracing for diagnostics."
   homepage "https://github.com/michaelversus/SwiftFindRefs"

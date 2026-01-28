@@ -6,6 +6,7 @@ import Foundation
 struct SwiftFindRefs: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "CLI that helps you interact with Xcode's IndexStoreDB.",
+        version: version,
         subcommands: [Search.self, Remove.self],
         defaultSubcommand: Search.self
     )
@@ -103,4 +104,14 @@ extension SwiftFindRefs {
             try await compositionRoot.run()
         }
     }
+}
+
+extension SwiftFindRefs {
+    static let version: String = {
+        guard let url = Bundle.module.url(forResource: "VERSION", withExtension: nil),
+              let content = try? String(contentsOf: url, encoding: .utf8) else {
+            return "unknown"
+        }
+        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }()
 }

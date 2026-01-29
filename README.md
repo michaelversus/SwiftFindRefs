@@ -38,8 +38,8 @@ brew install swiftfindrefs
 ## ⚙️ Command line options
 
 ### Common options (available for all subcommands)
-- `-p, --projectName` helps the tool infer the right DerivedData folder when you do not pass `derivedDataPath`.
-- `-d, --derivedDataPath` points directly to a DerivedData (or IndexStoreDB) directory and skips discovery.
+- `-p, --projectName` helps the tool infer the right DerivedData folder when `dataStorePath` is not provided.
+- `-d, --dataStorePath` points directly to a DataStore directory. When provided, this takes priority over `--projectName`.
 - `-v, --verbose` enables verbose output for diagnostic purposes (flag, no value required).
 
 ### Search subcommand

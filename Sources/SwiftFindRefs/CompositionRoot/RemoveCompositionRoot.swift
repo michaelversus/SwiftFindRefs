@@ -3,7 +3,7 @@ import Foundation
 
 struct RemoveCompositionRoot {
     let projectName: String?
-    let derivedDataPath: String?
+    let dataStorePath: String?
     let excludeCompilationConditionals: Bool
     let print: (String) -> Void
     let vPrint: (String) -> Void
@@ -12,14 +12,20 @@ struct RemoveCompositionRoot {
     let removerFactory: (String) -> UnnecessaryTestableRemoving
 
     func run() async throws {
-        let derivedDataPaths = try derivedDataLocator.locateDerivedData(
-            projectName: projectName,
-            derivedDataPath: derivedDataPath
-        )
-        vPrint("DerivedData path: \(derivedDataPaths.derivedDataURL.path)")
-        vPrint("IndexStoreDB path: \(derivedDataPaths.indexStoreDBURL.path)")
-        let indexStorePath = derivedDataPaths.indexStoreDBURL.deletingLastPathComponent().path
-        let remover = removerFactory(indexStorePath)
+        var pathToDataStore: String
+        if let dataStorePath {
+            guard fileSystem.fileExists(atPath: dataStorePath) else { throw DataStorePathValidationError.invalidPath(dataStorePath) }
+            pathToDataStore = dataStorePath
+        } else {
+            let derivedDataPaths = try derivedDataLocator.locateDerivedData(
+              projectName: projectName
+            )
+            pathToDataStore = derivedDataPaths.dataStoreURL.path()
+            vPrint("Discovering DataStore path based on projectName: \(String(describing: projectName))")
+        }
+        vPrint("Using DataStore path: \(pathToDataStore)")
+        
+        let remover = removerFactory(pathToDataStore)
         let updatedFiles = try await remover.run()
         print("✅ Updated \(updatedFiles.count) files")
         vPrint("Updated files:")

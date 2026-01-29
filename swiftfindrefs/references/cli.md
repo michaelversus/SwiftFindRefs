@@ -7,10 +7,10 @@
 
 ## Flags
 - `-p, --projectName`
-  Helps infer the correct DerivedData folder when `--derivedDataPath` is not provided.
+  Helps infer the correct DerivedData folder when `--dataStorePath` is not provided.
 
-- `-d, --derivedDataPath`
-  Points directly to a DerivedData (or IndexStoreDB) directory and skips discovery.
+- `-d, --dataStorePath`
+  Points directly to a DataStore (or IndexStoreDB) directory and skips discovery.
 
 - `-v, --verbose` (flag, no value required)
   Enables verbose output for diagnostic purposes.

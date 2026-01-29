@@ -10,14 +10,14 @@ struct RemoveCompositionRootTests {
         let fileSystem = MockFileSystem(fileExistsResults: [invalidPath: false])
         let sut = makeRemoveSUT(
             projectName: "Project",
-            derivedDataPath: invalidPath,
+            dataStorePath: invalidPath,
             excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             removerFactory: { _ in MockRemover(result: []) }
         )
 
         // When
-        let error = await #expect(throws: DerivedDataLocatorError.self) {
+        let error = await #expect(throws: DataStorePathValidationError.self) {
             try await sut.run()
         }
 
@@ -32,12 +32,12 @@ struct RemoveCompositionRootTests {
     @Test("test run prints updated files count when nothing updated")
     func test_run_WhenNoUpdates_PrintsUpdatedCount() async throws {
         // Given
-        let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
-        let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
+        let dataStorePath = "/mock/DerivedData/IndexStoreDB"
+        let fileSystem = MockFileSystem(fileExistsResults: [dataStorePath: true])
         var printMessages: [String] = []
         let sut = makeRemoveSUT(
             projectName: "Project",
-            derivedDataPath: derivedDataPath,
+            dataStorePath: dataStorePath,
             excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
@@ -54,15 +54,15 @@ struct RemoveCompositionRootTests {
     @Test("test run prints updated files when remover returns results")
     func test_run_WhenUpdatesExist_PrintsUpdatedFiles() async throws {
         // Given
-        let derivedDataPath = "/mock/DerivedData/IndexStoreDB"
-        let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
+        let dataStorePath = "/mock/DerivedData/IndexStoreDB"
+        let fileSystem = MockFileSystem(fileExistsResults: [dataStorePath: true])
         var printMessages: [String] = []
         var vPrintMessages: [String] = []
         let updatedFiles = ["/mock/FileA.swift", "/mock/FileB.swift"]
         var receivedIndexStorePath: String?
         let sut = makeRemoveSUT(
             projectName: "Project",
-            derivedDataPath: derivedDataPath,
+            dataStorePath: dataStorePath,
             excludeCompilationConditionals: false,
             fileSystem: fileSystem,
             print: { printMessages.append($0) },
@@ -77,7 +77,7 @@ struct RemoveCompositionRootTests {
         try await sut.run()
 
         // Then
-        #expect(receivedIndexStorePath == "/mock/DerivedData")
+        #expect(receivedIndexStorePath == "/mock/DerivedData/IndexStoreDB")
         #expect(printMessages.contains("✅ Updated 2 files"))
         #expect(vPrintMessages.contains("Updated files:"))
         #expect(vPrintMessages.contains("/mock/FileA.swift"))
@@ -86,7 +86,7 @@ struct RemoveCompositionRootTests {
 
     private func makeRemoveSUT(
         projectName: String?,
-        derivedDataPath: String?,
+        dataStorePath: String?,
         excludeCompilationConditionals: Bool,
         fileSystem: MockFileSystem,
         print: @escaping (String) -> Void = { _ in },
@@ -95,7 +95,7 @@ struct RemoveCompositionRootTests {
     ) -> RemoveCompositionRoot {
         RemoveCompositionRoot(
             projectName: projectName,
-            derivedDataPath: derivedDataPath,
+            dataStorePath: dataStorePath,
             excludeCompilationConditionals: excludeCompilationConditionals,
             print: print,
             vPrint: vPrint,

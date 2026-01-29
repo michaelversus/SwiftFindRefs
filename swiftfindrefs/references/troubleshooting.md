@@ -9,7 +9,7 @@
 - If multiple DerivedData folders exist for the same project `swiftfindrefs` will use the most recent one.
 
 ## Wrong DerivedData selected
-- Prefer explicit `--derivedDataPath` in CI or multi-clone setups.
+- Prefer explicit `--dataStorePath` in CI or multi-clone setups.
 - Use `-v` or `--verbose` flag to confirm path selection.
 
 ## Do not fall back to grep

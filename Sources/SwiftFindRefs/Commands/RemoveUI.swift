@@ -42,7 +42,7 @@ extension SwiftFindRefs {
             let compositionRoot = RemoveCompositionRoot(
                 rootPath: common.rootPath,
                 print: { print($0) },
-                vPrint: { if common.verbose { print($0) } },
+                vPrint: vPrint,
                 fileSystem: fileSystem,
                 removerFactory: { configuration in
                     let ignoredModules: [String] = configuration.unusedImports?.ignoredModules ?? []
@@ -51,19 +51,15 @@ extension SwiftFindRefs {
                         print: { print($0) },
                         analyzer: UnnecessaryImportsAnalyzer(
                             fileSystem: fileSystem,
-                            extractor: ImportExtractor(
-                                fileSystem: fileSystem,
-                                excludeCompilationConditionals: excludeCompilationConditionals,
-                                ignoredModules: ignoredModules,
-                                prefix: .regularImport
-                            ),
                             collector: IndexStoreCollector(
                                 store: store,
                                 indexStorePath: indexStorePath
                             ),
                             indexStoreImportExtractor: IndexStoreImportExtractor(),
+                            ignoredModules: Set(ignoredModules),
                             excludedDirectories: excludedDirs,
-                            rootPath: rootPath
+                            rootPath: rootPath,
+                            vPrint: vPrint
                         ),
                         rewriter: UnnecessaryImportsRewriter(
                             fileSystem: fileSystem,

@@ -54,6 +54,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -120,6 +121,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -189,6 +191,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -246,6 +249,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -302,6 +306,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -358,6 +363,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -414,6 +420,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -479,6 +486,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -547,6 +555,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: IndexStoreImportExtractor(),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -604,6 +613,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: IndexStoreImportExtractor(),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -664,6 +674,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -721,6 +732,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -755,6 +767,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [generatedFile: []]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -789,6 +802,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [thirdPartyFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -868,6 +882,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA", "ModuleB"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -957,6 +972,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA", "ModuleB"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1003,6 +1019,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1050,6 +1067,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1107,6 +1125,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1181,6 +1200,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1228,6 +1248,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1293,6 +1314,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1353,6 +1375,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1412,6 +1435,7 @@ struct UnnecessaryImportsAnalyzerTests {
             collector: collector,
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: ["ModuleA"]]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 
@@ -1460,6 +1484,7 @@ struct UnnecessaryImportsAnalyzerTests {
             // MockIndexStoreImportExtractor will return empty since there are no occurrences
             indexStoreImportExtractor: MockIndexStoreImportExtractor(resultsByFile: [appFile: []]),
             ignoredModules: [],
+            excludedDirectories: nil,
             rootPath: "/"
         )
 

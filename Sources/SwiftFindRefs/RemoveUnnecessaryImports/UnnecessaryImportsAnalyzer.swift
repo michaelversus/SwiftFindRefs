@@ -17,8 +17,8 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         fileSystem: any FileSystemProvider,
         collector: any IndexStoreCollecting,
         indexStoreImportExtractor: any IndexStoreImportExtracting,
-        ignoredModules: Set<String> = [],
-        excludedDirectories: [String]? = nil,
+        ignoredModules: Set<String>,
+        excludedDirectories: [String]?,
         rootPath: String,
         vPrint: @escaping (String) -> Void = { _ in }
     ) {
@@ -41,15 +41,17 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
             return UnitSnapshot(mainFile: $0.mainFile, moduleName: $0.moduleName)
         }
         let unitsByModule = Dictionary(grouping: unitSnapshots, by: \.moduleName)
+        let fileForLogs = "ScrollDepthTrackerProtocol.swift" // errors: UIScrollView
 
         // Collect all module names for filtering imports
         let allModuleNames = Set(unitSnapshots.map { $0.moduleName })
+        print("ignoredModules: \(ignoredModules)")
 
         // Pre-read file lines for IndexStore-based import extraction
         let fileSystemBox = FileSystemBox(fileSystem: fileSystem)
         var fileLinesByPath: [String: [String]] = [:]
         for unit in unitSnapshots where FileValidation.isValidForRemoveScan(unit.mainFile, excludedDirectories: excludedDirectories, rootPath: rootPath) {
-            if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+            if unit.mainFile.contains(fileForLogs) {
                 print("Reading lines for \(unit.mainFile)")
             }
             if let lines = try? fileSystemBox.fileSystem.readLines(atPath: unit.mainFile) {
@@ -74,8 +76,8 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                     fileLines: fileLines,
                     ignoredModules: ignoredModules,
                     vPrint: vPrint
-                )
-                if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                ).filter({ !ignoredModules.contains($0) })
+                if unit.mainFile.contains(fileForLogs) {
                     print("Extracted imports for \(unit.mainFile): \(imports)")
                 }
 
@@ -106,7 +108,7 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         let specificImportsMap = specificImportsByFile
         let excludedDirs = excludedDirectories
         let root = rootPath
-        
+
 
         return try await withThrowingTaskGroup(of: (String, Set<String>)?.self) { group in
             for unit in unitSnapshots {
@@ -129,7 +131,7 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                         fileLines: fileLines
                     )
 
-                    if unit.mainFile.contains("Stoiximan/BrandColors.swift") { //|| unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                    if unit.mainFile.contains(fileForLogs) {
                         print("Referenced USRs for \(unit.mainFile): \(referencedUSRs)")
                         print("Referenced Names for \(unit.mainFile): \(referencedNames)")
                         print("Referenced Typealiases for \(unit.mainFile): \(referencedTypealiases)")
@@ -142,15 +144,15 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                         if requiredImports.contains(moduleName) {
                             continue
                         }
-                        
+
                         // Check if this is a project module (has dependentUnits)
                         // For project modules, use precise checks. For system frameworks, use USR contains check.
                         let isProjectModule = allModuleNames.contains(moduleName)
-                        
+
                         // For system frameworks or modules not in unitsByModule, check if USR contains module name
                         // USRs encode module names, so this works for system frameworks
                         if !isProjectModule {
-                            if unit.mainFile.contains("Stoiximan/BrandColors.swift") {
+                            if unit.mainFile.contains(fileForLogs) {
                                 print("Checking system framework module \(moduleName) for \(unit.mainFile)")
                             }
                             // System framework - check if any referenced USR contains the module name
@@ -166,6 +168,49 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
                                 if referencedUSR.contains(modulePattern) || referencedUSR.contains(classModulePattern) || referencedUSR.hasSuffix("@\(moduleName)") {
                                     requiredImports.insert(moduleName)
                                     break
+                                }
+                                if moduleName == "Foundation" && ValidSymbols.foundation.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "CoreGraphics" && (ValidSymbols.coregraphics.contains(referencedUSR) || referencedUSR.contains("7CGFloat") || referencedUSR.contains("6CGSize")) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "UIKit" && (SystemSymbols.uikit.contains(referencedUSR) || ValidSymbols.foundation.contains(referencedUSR) || referencedUSR.contains("7CGFloat") || referencedUSR.contains("6CGSize")) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "SwiftUI" && referencedUSR.contains("7Combine") {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "XCTest" && ValidSymbols.xctest.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "WebKit" && ValidSymbols.webkit.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "SafariServices" && ValidSymbols.safariservices.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "CoreLocation" && ValidSymbols.corelocation.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "MachO" && ValidSymbols.macho.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if moduleName == "AppTrackingTransparency" && ValidSymbols.appTrackingTransparency.contains(referencedUSR) {
+                                    requiredImports.insert(moduleName)
+                                    break
+                                }
+                                if referencedUSR.contains("\(moduleName.count)\(moduleName)") {
+                                    requiredImports.insert(moduleName)
                                 }
                             }
                             
@@ -500,4 +545,286 @@ struct UnnecessaryImportsAnalyzer: UnnecessaryAnalyzing {
         return importLines
     }
     
+}
+
+enum ValidSymbols {
+    static let foundation: Set<String> = [
+        // Base object / runtime
+        "c:objc(cs)NSObject",
+        "c:objc(cs)NSObject(im)init",
+        "c:objc(cs)NSObject(im)dealloc",
+        "c:objc(cs)NSObject(im)isEqual:",
+        "c:objc(cs)NSObject(im)hash",
+        "c:objc(cs)NSObject(im)description",
+
+        // Collections
+        "c:objc(cs)NSArray",
+        "c:objc(cs)NSMutableArray",
+        "c:objc(cs)NSDictionary",
+        "c:objc(cs)NSMutableDictionary",
+        "c:objc(cs)NSSet",
+        "c:objc(cs)NSMutableSet",
+        "c:objc(cs)NSOrderedSet",
+        "c:objc(cs)NSMutableOrderedSet",
+
+        // Strings & attributed strings
+        "c:objc(cs)NSString",
+        "c:objc(cs)NSMutableString",
+        "c:objc(cs)NSAttributedString",
+        "c:objc(cs)NSMutableAttributedString",
+
+        // Numbers & value types
+        "c:objc(cs)NSNumber",
+        "c:objc(cs)NSValue",
+        "c:objc(cs)NSDecimalNumber",
+
+        // Data & dates
+        "c:objc(cs)NSData",
+        "c:objc(cs)NSMutableData",
+        "c:objc(cs)NSDate",
+        "c:objc(cs)NSDateComponents",
+        "c:objc(cs)NSDateFormatter",
+        "c:objc(cs)NSCalendar",
+        "c:objc(cs)NSTimeZone",
+        "c:objc(cs)NSLocale",
+
+        // Errors & notifications
+        "c:objc(cs)NSError",
+        "c:objc(cs)NSNotification",
+        "c:objc(cs)NSNotificationCenter",
+
+        // File system & URLs
+        "c:objc(cs)NSURL",
+        "c:objc(cs)NSURLComponents",
+        "c:objc(cs)NSURLQueryItem",
+        "c:objc(cs)NSFileManager",
+        "c:objc(cs)NSFileHandle",
+
+        // Concurrency & execution
+        "c:objc(cs)NSOperation",
+        "c:objc(cs)NSOperationQueue",
+        "c:objc(cs)NSThread",
+        "c:objc(cs)NSRunLoop",
+        "c:objc(cs)NSTimer",
+
+        // KVC / KVO / predicates
+        "c:objc(cs)NSPredicate",
+        "c:objc(cs)NSExpression",
+        "c:objc(cs)NSSortDescriptor",
+
+        // Serialization
+        "c:objc(cs)NSJSONSerialization",
+        "c:objc(cs)NSPropertyListSerialization",
+        "c:objc(cs)NSKeyedArchiver",
+        "c:objc(cs)NSKeyedUnarchiver",
+
+        // Bundles & resources
+        "c:objc(cs)NSBundle",
+        "c:objc(cs)NSUserDefaults",
+
+        // Networking
+        "c:objc(cs)NSURLSessionDataTask",
+        "c:objc(cs)NSCachedURLResponse",
+        "c:@T@SecTrustRef",
+
+        "c:@T@NSTimeInterval",
+        "c:@T@NSInteger",
+        "c:@T@NSUInteger",
+        "c:@T@NSString",
+        "c:@T@NSNumber",
+        "c:@T@NSDecimalNumber",
+        "c:@T@NSData",
+        "c:@T@NSDate",
+        "c:@T@NSError",
+        "s:So19CLOCK_MONOTONIC_RAWSo9clockid_tavg",
+        "c:@EA@clockid_t@_CLOCK_MONOTONIC_RAW",
+        "c:@F@clock_gettime_nsec_np",
+        "c:objc(cs)OS_dispatch_queue",
+        "c:@F@dispatch_sync",
+        "c:objc(cs)NSProcessInfo(cpy)processInfo",
+        "c:objc(cs)NSProcessInfo(py)environment",
+        "c:objc(cs)NSProcessInfo",
+        "c:objc(cs)NSProcessInfo(cm)processInfo",
+        "c:objc(cs)NSProcessInfo(im)environment"
+    ]
+
+    static let coregraphics: Set<String> = [
+        "c:@T@CGFloat",
+        "c:@T@CGPoint",
+        "c:@T@CGSize",
+        "c:@T@CGRect",
+        "c:@T@CGAffineTransform",
+        "c:@T@CGVector",
+        "c:@T@CGPath",
+        "c:@T@CGColor",
+        "c:@T@CGColorSpace",
+        "c:@T@CGImage",
+        "c:@T@CGGradient",
+        "c:@T@CGContext",
+        "c:@T@CGBlendMode",
+        "c:@T@CGLineCap",
+        "c:@T@CGLineJoin",
+        "c:@T@CGPathDrawingMode",
+        "c:@T@CGTextDrawingMode",
+        "c:@T@CGTextAlignment"
+    ]
+
+    static let uikit: Set<String> = [
+
+        // MARK: - Core UIKit classes
+        "c:objc(cs)UIApplication",
+        "c:objc(cs)UIResponder",
+        "c:objc(cs)UIScreen",
+        "c:objc(cs)UIDevice",
+        "c:objc(cs)UIWindow",
+
+        // MARK: - View & View Controllers
+        "c:objc(cs)UIView",
+        "c:objc(cs)UIViewController",
+        "c:objc(cs)UINavigationController",
+        "c:objc(cs)UITabBarController",
+        "c:objc(cs)UISplitViewController",
+        "c:objc(cs)UIScrollView",
+
+        // MARK: - Common UI elements
+        "c:objc(cs)UILabel",
+        "c:objc(cs)UIButton",
+        "c:objc(cs)UIImageView",
+        "c:objc(cs)UITextField",
+        "c:objc(cs)UITextView",
+        "c:objc(cs)UISwitch",
+        "c:objc(cs)UISlider",
+        "c:objc(cs)UIProgressView",
+        "c:objc(cs)UIActivityIndicatorView",
+
+        // MARK: - Images, colors, fonts
+        "c:objc(cs)UIColor",
+        "c:objc(cs)UIImage",
+        "c:objc(cs)UIFont",
+        "c:objc(cs)UIImagePickerController",
+        "c:objc(cs)UITraitCollection",
+        "c:@E@UIUserInterfaceStyle",
+
+        // MARK: - Layout & constraints
+        "c:objc(cs)NSLayoutConstraint",
+        "c:objc(cs)UILayoutGuide",
+
+        // MARK: - Table & collection views
+        "c:objc(cs)UITableView",
+        "c:objc(cs)UITableViewCell",
+        "c:objc(cs)UICollectionView",
+        "c:objc(cs)UICollectionViewCell",
+        "c:objc(cs)UICollectionViewLayout",
+        "c:objc(cs)UICollectionViewFlowLayout",
+
+        // MARK: - Gestures & interactions
+        "c:objc(cs)UIGestureRecognizer",
+        "c:objc(cs)UITapGestureRecognizer",
+        "c:objc(cs)UIPanGestureRecognizer",
+        "c:objc(cs)UIScreenEdgePanGestureRecognizer",
+        "c:objc(cs)UILongPressGestureRecognizer",
+
+        // MARK: - Navigation & presentation
+        "c:objc(cs)UIAlertController",
+        "c:objc(cs)UIAlertAction",
+        "c:objc(cs)UIActivityViewController",
+
+        // MARK: - Animation & transitions
+        "c:objc(cs)UIViewPropertyAnimator",
+        "c:objc(cs)UIViewControllerAnimatedTransitioning",
+        "c:objc(cs)UIViewControllerTransitioningDelegate",
+        "c:@E@UIDeviceOrientation",
+        ":@E@UIInterfaceOrientation",
+
+        // MARK: - Accessibility
+        "c:objc(cs)UIAccessibilityElement",
+
+        // MARK: - UIKit collections & support types
+        "c:objc(cs)NSIndexPath",
+        "c:objc(cs)UIEdgeInsets",
+        "c:objc(cs)UIOffset",
+
+        // MARK: - Text & input
+        "c:objc(cs)UIKeyCommand",
+        "c:objc(cs)UITextInputMode",
+
+        // MARK: - CoreGraphics
+        "c:@S@CGSize@FI@width"
+
+    ]
+
+    static let xctest: Set<String> = [
+        "c:objc(cs)XCTestCase"
+    ]
+
+    static let webkit: Set<String> = [
+        "c:objc(cs)WKWebView"
+    ]
+
+    static let safariservices: Set<String> = [
+
+        // MARK: - Core classes
+        "c:objc(cs)SFSafariViewController",
+        "c:objc(cs)SFAuthenticationSession",          // deprecated but still indexed
+        "c:objc(cs)ASWebAuthenticationSession",       // often associated via SafariServices usage
+
+        // MARK: - Protocols
+        "c:objc(pl)SFSafariViewControllerDelegate",
+
+        // MARK: - Properties
+        "c:objc(cs)SFSafariViewController(py)delegate",
+        "c:objc(cs)SFSafariViewController(py)preferredBarTintColor",
+        "c:objc(cs)SFSafariViewController(py)preferredControlTintColor",
+        "c:objc(cs)SFSafariViewController(py)dismissButtonStyle",
+
+        // MARK: - Initializers
+        "c:objc(cs)SFSafariViewController(im)initWithURL:",
+        "c:objc(cs)SFSafariViewController(im)initWithURL:configuration:",
+
+        // MARK: - Delegate methods
+        "c:objc(pl)SFSafariViewControllerDelegate(im)safariViewControllerDidFinish:",
+        "c:objc(pl)SFSafariViewControllerDelegate(im)safariViewController:didCompleteInitialLoad:",
+        "c:objc(pl)SFSafariViewControllerDelegate(im)safariViewController:activityItemsForURL:title:",
+
+        // MARK: - Configuration
+        "c:objc(cs)SFSafariViewControllerConfiguration",
+        "c:objc(cs)SFSafariViewControllerConfiguration(py)entersReaderIfAvailable",
+        "c:objc(cs)SFSafariViewControllerConfiguration(py)barCollapsingEnabled"
+    ]
+
+    static let corelocation: Set<String> = [
+        "c:objc(cs)CLLocation",
+        "c:objc(cs)CLLocationCoordinate2D",
+        "c:objc(cs)CLLocationManager",
+        "c:objc(pl)CLLocationManagerDelegate",
+        "c:objc(cs)CLBeaconRegion",
+        "c:objc(cs)CLRegionState",
+        "c:objc(cs)CLVisit",
+        "c:objc(cs)CLGeocoder",
+        "c:objc(pl)CLGeocoderDelegate",
+        "c:objc(cs)CLHeading",
+        "c:objc(cs)CLHeadingFilter",
+        "c:objc(cs)CLHeadingOrientation",
+        "c:objc(cs)CLHeadingReferenceFrame",
+        "c:objc(cs)CLLocationDirection",
+        "c:objc(cs)CLLocationSpeed",
+        "c:objc(cs)CLLocationVerticalAccuracy",
+        "c:objc(cs)CLLocationHorizontalAccuracy",
+        "c:objc(cs)CLLocationDistance"
+    ]
+
+    static let macho: Set<String> = [
+        "c:@F@_dyld_get_image_name",
+        "c:@F@_dyld_image_count"
+    ]
+
+    static let appTrackingTransparency: Set<String> = [
+        "c:objc(cs)ATTrackingManager",
+        "c:@E@ATTrackingManagerAuthorizationStatus@ATTrackingManagerAuthorizationStatusAuthorized",
+        "c:@E@ATTrackingManagerAuthorizationStatus",
+        "c:@E@ATTrackingManagerAuthorizationStatus@ATTrackingManagerAuthorizationStatusNotDetermined",
+        "c:@E@ATTrackingManagerAuthorizationStatus@ATTrackingManagerAuthorizationStatusDenied",
+        "c:@E@ATTrackingManagerAuthorizationStatus@ATTrackingManagerAuthorizationStatusRestricted",
+        "c:@E@ATTrackingManagerAuthorizationStatus@ATTrackingManagerAuthorizationStatusAuthorized"
+    ]
 }

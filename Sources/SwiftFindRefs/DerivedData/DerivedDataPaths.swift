@@ -8,11 +8,10 @@ struct DerivedDataPaths {
     let shouldAppendExtraPaths: Bool
 
     /// Points to the IndexStore database, automatically appending the Xcode-specific subpath when needed.
-    var indexStoreDBURL: URL {
+    var dataStoreURL: URL {
         shouldAppendExtraPaths ? derivedDataURL
             .appendingPathComponent("Index.noindex", isDirectory: true)
             .appendingPathComponent("DataStore", isDirectory: true)
-            .appendingPathComponent("IndexStoreDB", isDirectory: true)
         : derivedDataURL
     }
 }

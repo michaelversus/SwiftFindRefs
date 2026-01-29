@@ -5,53 +5,15 @@ import Testing
 @Suite("DerivedDataLocator Tests")
 struct DerivedDataLocatorTests {
     // MARK: - Tests
-    @Test("test locateDerivedData with direct path exists returns provided URL")
-    func test_locateDerivedData_WithDirectPathExists_returnsProvidedURL() throws {
-        // Given
-        let providedPath = "/tmp/ManualDerivedData-\(UUID().uuidString)"
-        let fileSystem = MockFileSystem(
-            fileExistsResults: [providedPath: true]
-        )
-        let sut = makeSUT(fileSystem: fileSystem)
 
-        // When
-        let result = try sut.locateDerivedData(projectName: nil, derivedDataPath: providedPath)
-
-        // Then
-        let expectedURL = URL(fileURLWithPath: providedPath).standardizedFileURL
-        #expect(result.derivedDataURL == expectedURL)
-    }
-
-    @Test("test locateDerivedData with direct path missing throws invalidPath")
-    func test_locateDerivedData_WithDirectPathMissing_throwsInvalidPath() {
-        // Given
-        let providedPath = "/tmp/MissingDerivedData-\(UUID().uuidString)"
-        let fileSystem = MockFileSystem()
-        let sut = makeSUT(fileSystem: fileSystem)
-
-        // When
-        let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.locateDerivedData(projectName: nil, derivedDataPath: providedPath)
-        }
-
-        // Then
-        switch error {
-        case .invalidPath(let path):
-            let expectedPath = URL(fileURLWithPath: providedPath).standardizedFileURL.path
-            #expect(path == expectedPath)
-        default:
-            Issue.record("Expected invalidPath error, received \(error)")
-        }
-    }
-
-    @Test("test locateDerivedData without project and derived path throws missingInputs")
+    @Test("test locateDerivedData without project name throws missingInputs")
     func test_locateDerivedData_WithoutInputs_throwsMissingInputs() {
         // Given
         let sut = makeSUT()
 
         // When
         let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.locateDerivedData(projectName: nil, derivedDataPath: nil)
+            try sut.locateDerivedData(projectName: nil)
         }
 
         // Then
@@ -73,7 +35,7 @@ struct DerivedDataLocatorTests {
 
         // When
         let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.locateDerivedData(projectName: "SampleProject", derivedDataPath: nil)
+            try sut.locateDerivedData(projectName: "SampleProject")
         }
 
         // Then
@@ -103,7 +65,7 @@ struct DerivedDataLocatorTests {
 
         // When
         let error = #expect(throws: DerivedDataLocatorError.self) {
-            try sut.locateDerivedData(projectName: "TargetProject", derivedDataPath: nil)
+            try sut.locateDerivedData(projectName: "TargetProject")
         }
 
         // Then
@@ -135,7 +97,7 @@ struct DerivedDataLocatorTests {
         let sut = makeSUT(fileSystem: fileSystem)
 
         // When
-        let result = try sut.locateDerivedData(projectName: projectName, derivedDataPath: nil)
+        let result = try sut.locateDerivedData(projectName: projectName)
 
         // Then
         #expect(result.derivedDataURL == hierarchy.newestURL.standardizedFileURL)

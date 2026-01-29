@@ -13,7 +13,7 @@ struct DerivedDataLocatorErrorTests {
         let description = try #require(sut.errorDescription)
 
         // Then
-        #expect(description == "❌ Either projectName or derivedDataPath must be provided.")
+        #expect(description == "❌ Either projectName or dataStorePath must be provided.")
     }
 
     @Test("test errorDescription with missing derived data root includes provided path")
@@ -40,18 +40,5 @@ struct DerivedDataLocatorErrorTests {
 
         // Then
         #expect(description == "❌ No DerivedData entry matching project \(projectName) was found.")
-    }
-
-    @Test("test errorDescription with invalid path includes the invalid value")
-    func test_errorDescription_WithInvalidPath_returnsDetailedMessage() throws {
-        // Given
-        let invalidPath = "/invalid/path"
-        let sut: DerivedDataLocatorError = .invalidPath(invalidPath)
-
-        // When
-        let description = try #require(sut.errorDescription)
-
-        // Then
-        #expect(description == "❌ The provided DerivedData path does not exist: \(invalidPath).")
     }
 }

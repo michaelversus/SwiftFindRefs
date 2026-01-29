@@ -12,7 +12,7 @@ struct SearchCompositionRootTests {
         let fileSystem = MockFileSystem()
         let sut = makeSearchSUT(
             projectName: nil,
-            derivedDataPath: nil,
+            dataStorePath: nil,
             symbolType: "class",
             fileSystem: fileSystem
         )
@@ -36,13 +36,13 @@ struct SearchCompositionRootTests {
         let fileSystem = MockFileSystem(fileExistsResults: [invalidPath: false])
         let sut = makeSearchSUT(
             projectName: "Project",
-            derivedDataPath: invalidPath,
+            dataStorePath: invalidPath,
             symbolType: "class",
             fileSystem: fileSystem
         )
 
         // When
-        let error = await #expect(throws: DerivedDataLocatorError.self) {
+        let error = await #expect(throws: DataStorePathValidationError.self) {
             try await sut.run()
         }
 
@@ -57,13 +57,13 @@ struct SearchCompositionRootTests {
     @Test("test run with nil symbol type logs fallback before index store failure")
     func test_run_WithNilSymbolType_logsFallbackBeforeIndexStoreFailure() async throws {
         // Given
-        let derivedDataPath = "/tmp/nonexistent/IndexStoreDB"
-        let fileSystem = MockFileSystem(fileExistsResults: [derivedDataPath: true])
+        let dataStorePath = "/tmp/nonexistent/IndexStoreDB"
+        let fileSystem = MockFileSystem(fileExistsResults: [dataStorePath: true])
         var standardMessages: [String] = []
         var verboseMessages: [String] = []
         let sut = makeSearchSUT(
             projectName: "Project",
-            derivedDataPath: derivedDataPath,
+            dataStorePath: dataStorePath,
             symbolType: nil,
             fileSystem: fileSystem,
             print: { standardMessages.append($0) },
@@ -76,8 +76,7 @@ struct SearchCompositionRootTests {
         }
 
         // Then
-        #expect(verboseMessages.contains("DerivedData path: \(derivedDataPath)"))
-        #expect(verboseMessages.contains("IndexStoreDB path: \(derivedDataPath)"))
+        #expect(verboseMessages.contains("Using DataStore path: \(dataStorePath)"))
         let searchMessage = try #require(standardMessages.first { $0.contains("Searching for references") })
         #expect(searchMessage.contains("symbol 'MySymbol'"))
         #expect(searchMessage.contains("of type 'any'"))
@@ -87,7 +86,7 @@ struct SearchCompositionRootTests {
 
     private func makeSearchSUT(
         projectName: String?,
-        derivedDataPath: String?,
+        dataStorePath: String?,
         symbolName: String = "MySymbol",
         symbolType: String? = "class",
         fileSystem: MockFileSystem,
@@ -96,7 +95,7 @@ struct SearchCompositionRootTests {
     ) -> SearchCompositionRoot {
         SearchCompositionRoot(
             projectName: projectName,
-            derivedDataPath: derivedDataPath,
+            dataStorePath: dataStorePath,
             symbolName: symbolName,
             symbolType: symbolType,
             print: print,
@@ -106,3 +105,4 @@ struct SearchCompositionRootTests {
         )
     }
 }
+
